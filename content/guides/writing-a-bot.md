@@ -3,6 +3,7 @@ order: 3
 title: Writing a bot
 category: API
 summary: Script the game in a few lines, then let an AI agent play it for you.
+imageUrl: https://raw.githubusercontent.com/batou9150/quest/main/content/guides/images/writing-a-bot.jpg
 ---
 
 Once you can play with `curl` ([Playing with the API](/guides/playing-with-the-api)), the next step is to let a program play.
