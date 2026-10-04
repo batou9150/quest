@@ -17,6 +17,8 @@ env:
 
 jobs:
   deploy:
+    # Skipped until the repository variables from docs/DEPLOY.md are set.
+    if: vars.GCP_PROJECT_ID != ''
     runs-on: ubuntu-latest
     environment: production
     permissions:
