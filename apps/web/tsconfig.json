@@ -1,14 +1,29 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
     "jsx": "react-jsx",
-    "types": ["vite/client"],
+    "types": [
+      "vite/client"
+    ],
     "composite": true,
     "emitDeclarationOnly": true,
     "noEmit": false,
     "outDir": "../../node_modules/.tsbuild/web"
   },
-  "include": ["src"],
-  "references": [{ "path": "../../packages/shared" }]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../packages/shared"
+    },
+    {
+      "path": "../../packages/engine"
+    }
+  ]
 }

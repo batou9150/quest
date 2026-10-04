@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent } from 'react';
-import { Eye, EyeOff, FileJson, Layers, Pencil, Trash2, Upload, X } from 'lucide-react';
+import { Link } from 'react-router';
+import { Eye, EyeOff, FileJson, Layers, Network, Pencil, Trash2, Upload, X } from 'lucide-react';
 import type { AdminLevel, AdminLevelPatch } from '@quest/shared';
 import { api, ApiError, errorMessage } from '../../lib/api';
 import { useApi } from '../../lib/hooks';
@@ -180,6 +181,9 @@ function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: 
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-2">
+          <Link to={`/admin/levels/${encodeURIComponent(level.id)}/preview`} className={`${btnSecondary} ${btnSmall}`}>
+            <Network size={14} aria-hidden /> Preview
+          </Link>
           <button type="button" className={`${btnSecondary} ${btnSmall}`} onClick={onView}>
             <FileJson size={14} aria-hidden /> JSON
           </button>

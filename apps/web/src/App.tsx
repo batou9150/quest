@@ -20,6 +20,9 @@ import { Loading } from './components/Status';
 // Admin pages are only for a handful of users: keep them out of the main bundle.
 const AdminUsers = lazy(() => import('./pages/admin/AdminUsers').then((m) => ({ default: m.AdminUsers })));
 const AdminLevels = lazy(() => import('./pages/admin/AdminLevels').then((m) => ({ default: m.AdminLevels })));
+const AdminLevelPreview = lazy(() =>
+  import('./pages/admin/AdminLevelPreview').then((m) => ({ default: m.AdminLevelPreview })),
+);
 const AdminEvents = lazy(() => import('./pages/admin/AdminEvents').then((m) => ({ default: m.AdminEvents })));
 const AdminGuides = lazy(() => import('./pages/admin/AdminGuides').then((m) => ({ default: m.AdminGuides })));
 
@@ -61,6 +64,7 @@ export function App() {
                 <Route index element={<Navigate to="users" replace />} />
                 <Route path="users" element={<AdminUsers />} />
                 <Route path="levels" element={<AdminLevels />} />
+                <Route path="levels/:id/preview" element={<AdminLevelPreview />} />
                 <Route path="events" element={<AdminEvents />} />
                 <Route path="guides" element={<AdminGuides />} />
               </Route>

@@ -25,7 +25,8 @@ export default defineConfig({
         codeSplitting: {
           groups: [
             { name: 'react', test: /node_modules[\\/](react|react-dom|react-router|scheduler)[\\/]/, priority: 2 },
-            { name: 'vendor', test: /node_modules/, priority: 1 },
+            // The graph libraries of the admin level preview stay in that lazy page's chunk.
+            { name: 'vendor', test: /node_modules[\\/](?!@xyflow|@dagrejs|d3-|classcat|zustand)/, priority: 1 },
           ],
         },
       },
