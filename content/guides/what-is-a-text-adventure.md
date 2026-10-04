@@ -3,6 +3,7 @@ order: 1
 title: What is a text adventure?
 category: Getting started
 summary: The genre in two minutes, and how The Quantum Quest turns it into a programming game.
+imageUrl: https://raw.githubusercontent.com/batou9150/quest/main/content/guides/images/what-is-a-text-adventure.jpg
 ---
 
 A **text adventure** (also called *interactive fiction*) is a game where everything happens through text. The game describes where you are; you answer with short commands such as `look`, `take key` or `go north`. There are no graphics: the world lives in the descriptions, and in your head.

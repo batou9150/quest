@@ -3,6 +3,7 @@ order: 2
 title: Playing with the API
 category: API
 summary: Get an API key and play a level with curl, one request per command.
+imageUrl: https://raw.githubusercontent.com/batou9150/quest/main/content/guides/images/playing-with-the-api.jpg
 ---
 
 Everything you can do in the browser terminal, you can do over HTTP. This guide uses `curl`, but any language works.
