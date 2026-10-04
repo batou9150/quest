@@ -25,6 +25,10 @@ Each game mechanic teaches one agent engineering lesson:
 
 Formats: 2 hours (the three steps on the demo levels), half a day (more time on the agent), or a hackathon (teams iterate on their agent against an event leaderboard).
 
+## Inspiration
+
+The Quantum Quest is inspired by [The Temple of the Forgotten Prompt](https://adventure.wietsevenema.eu/), a text adventure for humans and AI agents created by [Wietse Venema](https://github.com/wietsevenema), which I played at "AI Agents : Live + Labs Paris", a Google Cloud event. Quest is an independent, open-source implementation (engine, levels, platform) that keeps the same game commands (`look`, `examine`, `move`, `take`, `drop`, `use`, `inventory`). I built it to run my own workshops: self-hosted on your own Google Cloud project, with your own levels, in English or French.
+
 ## Run a workshop
 
 1. Get an instance: deploy your own ([docs/DEPLOY.md](docs/DEPLOY.md)) or run it locally (below).

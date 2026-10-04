@@ -57,6 +57,19 @@ export function About() {
           />
         </p>
       </div>
+
+      <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-6 sm:p-8">
+        <h2 className="text-2xl font-bold text-white">{t('about.inspirationTitle')}</h2>
+        <p className="text-slate-400">
+          <Trans
+            i18nKey="about.inspirationText"
+            components={{
+              game: <a href="https://adventure.wietsevenema.eu/" target="_blank" rel="noopener noreferrer" className={link} />,
+              author: <a href="https://github.com/wietsevenema" target="_blank" rel="noopener noreferrer" className={link} />,
+            }}
+          />
+        </p>
+      </div>
     </div>
   );
 }

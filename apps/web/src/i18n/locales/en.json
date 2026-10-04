@@ -112,7 +112,9 @@
     "step3": "Play it in the web terminal, or generate an API key and play with curl, a script or an AI agent.",
     "step4": "Finish in fewer actions for a higher score, and climb the event leaderboards.",
     "creatorsTitle": "Creators & contact",
-    "creatorsText": "The Quantum Quest is an open-source project created by Baptiste Pirault and released under the MIT licence. Found a bug in the simulation or have an idea for a level? <issues>Open an issue</issues> on the <repo>GitHub repository</repo>."
+    "creatorsText": "The Quantum Quest is an open-source project created by Baptiste Pirault and released under the MIT licence. Found a bug in the simulation or have an idea for a level? <issues>Open an issue</issues> on the <repo>GitHub repository</repo>.",
+    "inspirationTitle": "Inspiration",
+    "inspirationText": "Inspired by <game>The Temple of the Forgotten Prompt</game> by <author>Wietse Venema</author>."
   },
   "login": {
     "title": "Identify yourself",
