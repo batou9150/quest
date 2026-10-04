@@ -2,6 +2,8 @@
 
 A text adventure you play over HTTP: in the browser, with `curl`, or with your own AI agent.
 
+![The Quantum Quest home page: "Enter The Quantum Quest", with buttons to start a quest or read the guides, and cards for playing in the browser, by API, or in events](docs/images/home.png)
+
 ```bash
 curl -H "Authorization: ApiKey $QUEST_KEY" https://<your-instance>/game/look
 ```
