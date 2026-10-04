@@ -8,3 +8,6 @@ coverage/
 .DS_Store
 firebase-debug.log
 firestore-debug.log
+
+# Claude Code worktrees (separate checkouts of this repo)
+.claude/worktrees/
