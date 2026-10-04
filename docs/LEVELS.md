@@ -1,6 +1,6 @@
 # Writing levels
 
-A level is one JSON file, validated by `parseLevel()` in `packages/engine/src/schema.ts`. The public example is [`packages/levels-demo/level.json`](../packages/levels-demo/level.json).
+A level is one JSON file, validated by `parseLevel()` in `packages/engine/src/schema.ts`. The public examples are the three demo levels in [`packages/levels-demo/levels/`](../packages/levels-demo/levels), from simple to harder: a tutorial, a level with item combinations, and a six-room level where the order of actions matters.
 
 Keep real levels **out of this repository**: it is public, and a level file is its own solution. Keep them in a private folder or repository and upload them with:
 
@@ -61,4 +61,4 @@ Order rules from most to least specific: put the success rule first and hint rul
 - Every room is reachable, and the finishing exit is reachable.
 - `par` is the length of the shortest solution plus a little slack; count only examine, move, take, drop and use.
 - Each locked exit and failed `use` gives a hint, not just "Nothing happens."
-- Add a playthrough test like `packages/levels-demo/demo.test.ts` in your private levels folder.
+- Add a playthrough test like [`packages/levels-demo/demo.test.ts`](../packages/levels-demo/demo.test.ts) in your private levels folder.

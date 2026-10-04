@@ -1,6 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { demoLevel } from '@quest/levels-demo';
+import { demoLevels } from '@quest/levels-demo';
 import { GuideInputSchema, SLUG_PATTERN } from '@quest/shared';
 import type { Db } from './db/db.ts';
 import { log } from './http.ts';
@@ -9,13 +9,14 @@ import { paths, type GuideDoc, type LevelDoc } from './models.ts';
 export const STARTER_AUTHOR = 'The Quantum Quest';
 
 /**
- * Adds the public starter content (demo level, guides in content/guides/*.md) when it is missing.
+ * Adds the public starter content (demo levels, guides in content/guides/*.md) when it is missing.
  * Never overwrites admin edits. Deleted items come back on the next start; set SEED_DEMO=false to stop seeding.
  */
 export async function seedContent(db: Db, guidesDir: string, now: Date): Promise<void> {
-  if (!(await db.get(paths.level(demoLevel.id)))) {
-    await db.set<LevelDoc>(paths.level(demoLevel.id), { ...demoLevel, published: true, updatedAt: now.toISOString() });
-    log('INFO', `Seeded level ${demoLevel.id}`);
+  for (const level of demoLevels) {
+    if (await db.get(paths.level(level.id))) continue;
+    await db.set<LevelDoc>(paths.level(level.id), { ...level, published: true, updatedAt: now.toISOString() });
+    log('INFO', `Seeded level ${level.id}`);
   }
   for (const [slug, guide, order] of loadGuides(guidesDir)) {
     if (await db.get(paths.guide(slug))) continue;

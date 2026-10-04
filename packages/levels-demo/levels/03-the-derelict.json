@@ -1,0 +1,245 @@
+{
+  "id": "demo-derelict",
+  "number": 3,
+  "title": "The Derelict",
+  "summary": "The ring drops you into the hangar of a dead alien ship. Bring it back to life just long enough to leave.",
+  "points": 300,
+  "par": 24,
+  "penaltyPerAction": 5,
+  "world": {
+    "start": "hangar",
+    "rooms": {
+      "hangar": {
+        "name": "Wrecked Hangar",
+        "description": "A huge hangar lit only by the ring you came through, already fading. Twisted metal everywhere. The air is cold and smells of dust. In the north wall, a jammed hatch.",
+        "descriptionWhen": [
+          { "flag": "hatch_open", "text": "The hatch hangs open, bent where you forced it." }
+        ],
+        "items": ["crowbar", "lamp", "hatch"],
+        "exits": {
+          "north": {
+            "to": "corridor",
+            "description": "A heavy hatch, its edge buckled. It is stuck a finger's width open.",
+            "requires": { "flags": ["hatch_open"] },
+            "lockedMessage": "The hatch is jammed. If only you had something to lever it open."
+          }
+        }
+      },
+      "corridor": {
+        "name": "Main Corridor",
+        "description": "A long corridor with ribbed walls. Faint red emergency strips glow along the floor. A scorched panel hangs off the wall. Doors lead west and east; at the far north end, a sealed bulkhead.",
+        "descriptionWhen": [
+          { "flag": "power_on", "text": "Lights flicker on overhead. The bulkhead to the north has slid open." }
+        ],
+        "items": ["panel"],
+        "exits": {
+          "south": { "to": "hangar", "description": "Back to the hangar." },
+          "west": { "to": "quarters", "description": "A door marked with a symbol like a sleeping figure." },
+          "east": {
+            "to": "engine",
+            "description": "Beyond this door, total darkness. You hear a low hum.",
+            "requires": { "inventory": ["lit_lamp"] },
+            "lockedMessage": "You take two steps into the pitch-black room, bang your shin on something sharp, and retreat. You need light."
+          },
+          "north": {
+            "to": "bridge",
+            "description": "A massive bulkhead marked with the symbol of an eye. No power reaches it.",
+            "requires": { "flags": ["power_on"] },
+            "lockedMessage": "The bulkhead doesn't move. The ship has no power."
+          }
+        }
+      },
+      "quarters": {
+        "name": "Crew Quarters",
+        "description": "Rows of empty bunks, sized for beings taller than you. Personal belongings float in the dust as if left in a hurry.",
+        "items": ["battery", "journal", "bunks"],
+        "exits": {
+          "east": { "to": "corridor", "description": "Back to the corridor." }
+        }
+      },
+      "engine": {
+        "name": "Engine Room",
+        "description": "The heart of the ship: a tall reactor column, cold and silent. A big red valve sticks out of a pipe beside it. A ladder leads down.",
+        "descriptionWhen": [
+          { "flag": "coolant_open", "text": "Coolant gurgles through the pipes." },
+          { "flag": "fuse_in", "text": "A new fuse glows in the reactor's base." },
+          { "flag": "power_on", "text": "The reactor hums with blue light." }
+        ],
+        "items": ["reactor", "valve"],
+        "exits": {
+          "west": { "to": "corridor", "description": "Back to the corridor." },
+          "down": { "to": "cargo", "description": "A ladder into the cargo hold." }
+        }
+      },
+      "cargo": {
+        "name": "Cargo Hold",
+        "description": "Crates stacked to the ceiling, many smashed open. Your lamp throws long shadows.",
+        "items": ["fuse", "crates"],
+        "exits": {
+          "up": { "to": "engine", "description": "The ladder back up to the engine room." }
+        }
+      },
+      "bridge": {
+        "name": "Bridge",
+        "description": "A dome of glass looking out onto a field of stars. In the centre, the helm: a ring of glowing controls. To the side, a small round door labelled with the symbol of a seed: the escape pod.",
+        "descriptionWhen": [
+          { "flag": "pod_armed", "text": "The escape pod door stands open, its launch lights blinking green." }
+        ],
+        "items": ["helm", "chair"],
+        "exits": {
+          "south": { "to": "corridor", "description": "Back down the corridor." },
+          "pod": {
+            "finish": true,
+            "description": "A pod just big enough for one. Its door is locked from the helm.",
+            "requires": { "flags": ["pod_armed"] },
+            "lockedMessage": "The pod door is sealed. It must be released from the helm."
+          }
+        }
+      }
+    },
+    "items": {
+      "crowbar": {
+        "name": "Crowbar",
+        "aliases": ["crowbar", "bar", "lever"],
+        "description": "A length of alien metal, bent at one end. A perfect lever."
+      },
+      "lamp": {
+        "name": "Dead Lamp",
+        "aliases": ["lamp", "torch", "light"],
+        "description": "A hand lamp of alien design. Its battery slot is empty."
+      },
+      "lit_lamp": {
+        "name": "Lit Lamp",
+        "aliases": ["lamp", "torch", "light"],
+        "description": "The lamp shines a strong white beam."
+      },
+      "hatch": {
+        "name": "Jammed Hatch",
+        "aliases": ["hatch", "door"],
+        "description": "A heavy hatch, stuck a finger's width open. Something flat could fit in the gap.",
+        "takeable": false,
+        "fixedMessage": "It's part of the ship."
+      },
+      "panel": {
+        "name": "Scorched Panel",
+        "aliases": ["panel"],
+        "description": "A wall panel burned black. Through the soot you read, in the ship's pictograms: a drop of water, then a lightning bolt, then the reactor. Coolant first, then the fuse... or the other way round? The middle is burned away.",
+        "takeable": false,
+        "fixedMessage": "It's welded to the wall."
+      },
+      "battery": {
+        "name": "Power Cell",
+        "aliases": ["cell", "battery", "power cell"],
+        "description": "A small glowing cylinder, still charged. It looks like it fits a hand lamp."
+      },
+      "journal": {
+        "name": "Crew Journal",
+        "aliases": ["journal", "diary", "book"],
+        "description": "The last entry, in the ship's pictograms: \"Fuse blown. Spare fuses are in the cargo hold. Remember: coolant BEFORE ignition, or the reactor will shut itself down.\""
+      },
+      "bunks": {
+        "name": "Bunks",
+        "aliases": ["bunks", "bunk", "beds", "bed"],
+        "description": "Long, narrow and empty. Nobody has slept here in a very long time.",
+        "takeable": false,
+        "fixedMessage": "They are bolted to the floor."
+      },
+      "reactor": {
+        "name": "Reactor Column",
+        "aliases": ["reactor", "column", "core"],
+        "description": "A column of crystal and metal reaching to the ceiling. At its base, a scorched fuse socket and an ignition switch.",
+        "takeable": false,
+        "fixedMessage": "Absolutely not."
+      },
+      "valve": {
+        "name": "Coolant Valve",
+        "aliases": ["valve", "coolant", "red valve"],
+        "description": "A big red wheel on a pipe marked with the drop-of-water symbol.",
+        "takeable": false,
+        "fixedMessage": "It's part of the pipe."
+      },
+      "fuse": {
+        "name": "Spare Fuse",
+        "aliases": ["fuse"],
+        "description": "A thick crystal fuse, still in its packing."
+      },
+      "crates": {
+        "name": "Crates",
+        "aliases": ["crates", "crate", "boxes"],
+        "description": "Mostly smashed and empty. Stencilled on them: the same lightning-bolt symbol as the reactor's fuse socket.",
+        "takeable": false,
+        "fixedMessage": "Far too heavy, and mostly empty anyway."
+      },
+      "helm": {
+        "name": "Helm",
+        "aliases": ["helm", "controls", "wheel"],
+        "description": "A ring of controls around a central sphere. One control shows the seed symbol of the escape pod.",
+        "takeable": false,
+        "fixedMessage": "It is part of the bridge."
+      },
+      "chair": {
+        "name": "Captain's Chair",
+        "aliases": ["chair", "seat", "throne"],
+        "description": "A tall chair facing the stars. Whoever sat here left a very long time ago.",
+        "takeable": false,
+        "fixedMessage": "It's bolted down. And you shouldn't sit in the captain's chair."
+      }
+    },
+    "rules": [
+      {
+        "use": "crowbar",
+        "on": "hatch",
+        "effects": [{ "setFlag": "hatch_open" }],
+        "message": "You jam the crowbar into the gap and heave. With a shriek of metal, the hatch swings open."
+      },
+      {
+        "use": "battery",
+        "on": "lamp",
+        "effects": [{ "removeItem": "battery" }, { "removeItem": "lamp" }, { "giveItem": "lit_lamp" }],
+        "message": "The cell clicks into the lamp. A strong white beam cuts through the dark."
+      },
+      {
+        "use": "lit_lamp",
+        "message": "You sweep the beam around. Dust, shadows, and nothing else you didn't already know."
+      },
+      {
+        "use": "valve",
+        "room": "engine",
+        "effects": [{ "setFlag": "coolant_open" }],
+        "message": "You heave the wheel round. Coolant gurgles through the pipes around the reactor."
+      },
+      {
+        "use": "fuse",
+        "on": "reactor",
+        "effects": [{ "removeItem": "fuse" }, { "setFlag": "fuse_in" }],
+        "message": "You slot the spare fuse into the socket. It lights up, waiting."
+      },
+      {
+        "use": "reactor",
+        "requires": { "flags": ["fuse_in", "coolant_open"] },
+        "effects": [{ "setFlag": "power_on" }],
+        "message": "You flip the ignition. The reactor roars, then settles into a deep hum. All over the ship, lights come on and doors unlock."
+      },
+      {
+        "use": "reactor",
+        "requires": { "notFlags": ["fuse_in"] },
+        "message": "You flip the ignition. Nothing. The fuse socket is burned out."
+      },
+      {
+        "use": "reactor",
+        "requires": { "flags": ["fuse_in"], "notFlags": ["coolant_open"] },
+        "message": "You flip the ignition. The reactor flares, alarms scream, and it shuts itself down in a cloud of steam. Something must cool it first."
+      },
+      {
+        "use": "helm",
+        "requires": { "flags": ["power_on"] },
+        "effects": [{ "setFlag": "pod_armed" }],
+        "message": "You press the seed symbol. A voice speaks in a language you don't know, and the escape pod door hisses open."
+      },
+      {
+        "use": "journal",
+        "message": "You flip back through the pages. Diagrams of the reactor, a list of crew, and a drawing of a ring just like yours."
+      }
+    ]
+  }
+}

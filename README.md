@@ -31,7 +31,7 @@ gcloud emulators firestore start --host-port=localhost:8681
 
 | | |
 |---|---|
-| `npm test` | Engine, demo level and API tests (add `FIRESTORE_EMULATOR_HOST=…` to also test the Firestore store) |
+| `npm test` | Engine, demo levels and API tests (add `FIRESTORE_EMULATOR_HOST=…` to also test the Firestore store) |
 | `npm run typecheck` | TypeScript across all packages |
 | `npm run build` | Web app to `apps/web/dist`, API bundle to `apps/api/dist` |
 | `npm run levels:push -- <files> [--publish] [--dry-run]` | Validate and upload levels (see [docs/LEVELS.md](docs/LEVELS.md)) |

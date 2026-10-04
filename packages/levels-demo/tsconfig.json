@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": { "composite": true, "emitDeclarationOnly": true, "noEmit": false, "outDir": "../../node_modules/.tsbuild/levels-demo", "types": ["node"] },
-  "include": ["index.ts", "*.test.ts", "level.json"],
+  "include": ["index.ts", "*.test.ts", "levels/*.json"],
   "references": [{ "path": "../engine" }]
 }

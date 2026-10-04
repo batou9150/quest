@@ -27,6 +27,6 @@ jobs:
       - run: npm test
         env:
           FIRESTORE_EMULATOR_HOST: localhost:8681
-      - run: npm run levels:push -- packages/levels-demo/level.json --dry-run
+      - run: npm run levels:push -- packages/levels-demo/levels/*.json --dry-run
       - run: npm run build
       - run: docker build -t quest:ci .

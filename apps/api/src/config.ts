@@ -13,7 +13,7 @@ const EnvSchema = z.object({
   /** Public origin of the site, used for OAuth callbacks and CSRF checks. */
   PUBLIC_URL: z.url().default('http://localhost:5173'),
   STORE: z.enum(['firestore', 'memory']).default('firestore'),
-  /** Adds the demo level and starter guides at startup when missing (default: on with the memory store). */
+  /** Adds the demo levels and starter guides at startup when missing (default: on with the memory store). */
   SEED_DEMO: z.enum(['true', 'false']).optional(),
   /** Emails that get the admin role at login. Used to bootstrap the first admin. */
   ADMIN_EMAILS: list,

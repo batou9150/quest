@@ -1,0 +1,201 @@
+{
+  "id": "demo-dust-world",
+  "number": 2,
+  "title": "The Dust World",
+  "summary": "Stranded on the far side of the ring, under a burning sun. Find water, then a way home.",
+  "points": 200,
+  "par": 20,
+  "penaltyPerAction": 5,
+  "world": {
+    "start": "platform",
+    "rooms": {
+      "platform": {
+        "name": "Ring Platform",
+        "description": "You stumble out of the ring onto a stone platform. Behind you, the ring falls silent. Sand stretches in every direction under two white suns. A weathered pedestal stands before the ring. Green palms wave to the east; to the south, dunes roll toward the horizon.",
+        "descriptionWhen": [
+          { "flag": "dialer_powered", "text": "The pedestal glows a steady blue." },
+          { "flag": "home_dialed", "text": "The ring is open again, its surface rippling. Home is one step through the ring." }
+        ],
+        "items": ["kit", "pedestal", "ring"],
+        "exits": {
+          "east": { "to": "oasis", "description": "A path of flat stones toward the palms." },
+          "south": {
+            "to": "dunes",
+            "description": "Endless dunes, shimmering with heat.",
+            "requires": { "inventory": ["full_flask"] },
+            "lockedMessage": "Three steps into the dunes, the heat drives you back. You won't cross them without water."
+          },
+          "ring": {
+            "finish": true,
+            "description": "The ring that brought you here. It only goes home if someone dials home.",
+            "requires": { "flags": ["home_dialed"] },
+            "lockedMessage": "You walk through the inert stone ring and out the other side, still on the platform."
+          }
+        }
+      },
+      "oasis": {
+        "name": "Oasis",
+        "description": "A ring of palms around an old stone well. The shade is a blessing.",
+        "items": ["well", "rope"],
+        "exits": {
+          "west": { "to": "platform", "description": "Back to the ring platform." }
+        }
+      },
+      "dunes": {
+        "name": "Sea of Dunes",
+        "description": "Waves of red sand as far as you can see. Half-buried bones of some huge creature lie nearby. A glint of metal catches your eye in the sand. Far to the south, a pyramid of black stone.",
+        "items": ["disc", "bones"],
+        "exits": {
+          "north": { "to": "platform", "description": "Your own footprints, leading back to the ring." },
+          "south": { "to": "temple", "description": "The black pyramid. Its entrance is a dark triangle." }
+        }
+      },
+      "temple": {
+        "name": "Temple of the Two Suns",
+        "description": "A cool hall inside the pyramid. Light falls through a shaft onto a stone altar with a round hollow in its top. The far wall is covered in carvings.",
+        "descriptionWhen": [
+          { "flag": "altar_open", "text": "The altar's lid has slid aside." }
+        ],
+        "items": ["altar", "carving"],
+        "exits": {
+          "north": { "to": "dunes", "description": "Back out into the glare." }
+        }
+      }
+    },
+    "items": {
+      "kit": {
+        "name": "Field Kit",
+        "aliases": ["kit", "backpack", "bag"],
+        "description": "Your standard-issue field kit, still zipped shut. Something metal rattles inside. Use it to unpack it."
+      },
+      "flask": {
+        "name": "Empty Flask",
+        "aliases": ["flask", "canteen", "bottle"],
+        "description": "A metal flask. Bone dry."
+      },
+      "full_flask": {
+        "name": "Full Flask",
+        "aliases": ["flask", "canteen", "bottle", "water"],
+        "description": "A metal flask full of cool well water. Enough to cross the dunes."
+      },
+      "pedestal": {
+        "name": "Dialing Pedestal",
+        "aliases": ["pedestal", "dialer", "console", "dhd"],
+        "description": "A stone pedestal ringed with symbols, like the console back home, but older. A crystal socket in its side is empty.",
+        "takeable": false,
+        "fixedMessage": "It is carved from the platform itself."
+      },
+      "ring": {
+        "name": "Stone Ring",
+        "aliases": ["ring"],
+        "description": "The twin of the ring under the mountain, worn by sandstorms.",
+        "takeable": false,
+        "fixedMessage": "It weighs hundreds of tonnes."
+      },
+      "well": {
+        "name": "Stone Well",
+        "aliases": ["well"],
+        "description": "You can hear water far below, much deeper than your arm can reach.",
+        "takeable": false,
+        "fixedMessage": "It's a well. It stays where it is."
+      },
+      "rope": {
+        "name": "Frayed Rope",
+        "aliases": ["rope"],
+        "description": "A long rope, frayed but strong. Someone used it to draw water."
+      },
+      "disc": {
+        "name": "Bronze Disc",
+        "aliases": ["disc", "disk", "metal"],
+        "description": "A heavy bronze disc engraved with two suns. It is exactly the size of your palm."
+      },
+      "bones": {
+        "name": "Giant Bones",
+        "aliases": ["bones", "skeleton", "creature"],
+        "description": "The ribs alone are taller than you. Whatever it was, it didn't make it across the dunes either.",
+        "takeable": false,
+        "fixedMessage": "Even one rib is far too heavy."
+      },
+      "altar": {
+        "name": "Stone Altar",
+        "aliases": ["altar"],
+        "description": "A block of black stone. In its top, a round hollow engraved with two suns.",
+        "takeable": false,
+        "fixedMessage": "It is part of the temple."
+      },
+      "carving": {
+        "name": "Wall Carvings",
+        "aliases": ["carving", "carvings", "wall", "symbols"],
+        "description": "Rows of symbols. One group is set apart and framed with a picture of a mountain: an address. Home, maybe?",
+        "takeable": false,
+        "fixedMessage": "They are carved into the wall."
+      },
+      "crystal": {
+        "name": "Sun Crystal",
+        "aliases": ["crystal"],
+        "description": "A golden crystal that pulses with warm light. It would fit a socket."
+      }
+    },
+    "rules": [
+      {
+        "use": "kit",
+        "effects": [{ "removeItem": "kit" }, { "giveItem": "flask" }],
+        "message": "You empty the field kit: rations, a map of the wrong planet, and an empty flask. You keep the flask."
+      },
+      {
+        "use": "flask",
+        "on": "well",
+        "requires": { "inventory": ["rope"] },
+        "effects": [{ "removeItem": "flask" }, { "giveItem": "full_flask" }],
+        "message": "You tie the flask to the rope and lower it into the dark. It comes back up full of cold water."
+      },
+      {
+        "use": "flask",
+        "on": "well",
+        "message": "The water is far below. Your arm doesn't come close."
+      },
+      {
+        "use": "rope",
+        "on": "well",
+        "message": "You lower the rope into the well. It comes back up wet. You need something to hold the water."
+      },
+      {
+        "use": "full_flask",
+        "message": "You take a careful sip. Better keep the rest for the dunes."
+      },
+      {
+        "use": "disc",
+        "on": "altar",
+        "effects": [{ "removeItem": "disc" }, { "setFlag": "altar_open" }, { "spawnItem": "crystal" }],
+        "message": "The disc clicks into the hollow. Sunlight from the shaft hits it, and the altar's lid grinds aside, revealing a glowing crystal."
+      },
+      {
+        "use": "carving",
+        "effects": [{ "setFlag": "address_known" }],
+        "message": "You trace the framed symbols with your finger until you know them by heart."
+      },
+      {
+        "use": "crystal",
+        "on": "pedestal",
+        "effects": [{ "removeItem": "crystal" }, { "setFlag": "dialer_powered" }],
+        "message": "The crystal slides into the socket. The pedestal hums and its symbols light up."
+      },
+      {
+        "use": "pedestal",
+        "requires": { "flags": ["dialer_powered", "address_known"] },
+        "effects": [{ "setFlag": "home_dialed" }],
+        "message": "You press the symbols from the temple wall, one by one. The ring spins, locks, and erupts into a shimmering pool of light."
+      },
+      {
+        "use": "pedestal",
+        "requires": { "notFlags": ["dialer_powered"] },
+        "message": "The symbols are dead. The empty crystal socket says it all."
+      },
+      {
+        "use": "pedestal",
+        "requires": { "flags": ["dialer_powered"], "notFlags": ["address_known"] },
+        "message": "The pedestal is powered, but which symbols lead home? Somebody here must have written it down."
+      }
+    ]
+  }
+}
