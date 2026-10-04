@@ -25,7 +25,7 @@ Les commandes restent en anglais :
 
 ## La particularité : c'est une API
 
-Chaque commande est aussi un endpoint HTTP. Vous pouvez jouer dans le terminal du navigateur (**Jouer** dans le menu), mais aussi avec `curl`, avec un script que vous écrivez, ou avec un agent d'IA que vous construisez. Voir [Jouer avec l'API](/guides/playing-with-the-api).
+Chaque commande est aussi un endpoint HTTP. Vous pouvez jouer dans le terminal du navigateur (**Jouer** dans le menu), mais aussi avec `curl`, avec un script que vous écrivez, ou avec un agent d'IA que vous construisez. L'[atelier d'IA agentique](/guides/agentic-ai-workshop) vous fait passer par les trois.
 
 ## Le score
 

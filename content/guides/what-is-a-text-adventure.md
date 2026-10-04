@@ -1,5 +1,5 @@
 ---
-order: 1
+order: 2
 title: What is a text adventure?
 category: Getting started
 summary: The genre in two minutes, and how The Quantum Quest turns it into a programming game.
@@ -25,7 +25,7 @@ Each **level** is a small world: a handful of rooms, items to find and puzzles t
 
 ## The twist: it is an API
 
-Every command is also an HTTP endpoint. You can play in the browser terminal (**Play** in the menu), but also with `curl`, a script you write, or an AI agent you build. See [Playing with the API](/guides/playing-with-the-api).
+Every command is also an HTTP endpoint. You can play in the browser terminal (**Play** in the menu), but also with `curl`, a script you write, or an AI agent you build. The [agentic AI workshop](/guides/agentic-ai-workshop) takes you through all three.
 
 ## Scoring
 

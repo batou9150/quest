@@ -11,7 +11,7 @@ const NOW = new Date('2026-10-04T12:00:00Z');
 describe('starter content', () => {
   it('parses every guide in content/guides, in English and French', () => {
     const guides = loadGuides(guidesDir);
-    expect(guides.map((g) => g.slug)).toEqual(['playing-with-the-api', 'what-is-a-text-adventure', 'writing-a-bot']);
+    expect(guides.map((g) => g.slug)).toEqual(['agentic-ai-workshop', 'letting-an-agent-play', 'playing-with-the-api', 'what-is-a-text-adventure', 'writing-a-bot']);
     for (const { guide } of guides) {
       expect(Object.keys(guide.locales).sort()).toEqual(['en', 'fr']);
       for (const text of Object.values(guide.locales)) {
@@ -55,7 +55,7 @@ describe('starter content', () => {
 
     const guide = await db.get<GuideDoc>(paths.guide('writing-a-bot'));
     expect(guide!.locales.en).toMatchObject({ title: 'Old title', content: 'Old content' });
-    expect(guide!.locales.fr?.title).toBe('Écrire un bot');
+    expect(guide!.locales.fr?.title).toBe('Étape 2 : Un LLM écrit votre client');
     expect(guide!.publishedAt).toBe(legacy.publishedAt);
   });
 });
