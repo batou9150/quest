@@ -65,11 +65,18 @@ function LevelCard({ level, onStart, busy }: { level: LevelSummary; onStart: (re
         </button>
       )}
       {level.status === 'IN_PROGRESS' && (
-        <div className="flex gap-2">
-          <button type="button" className={`${btnPrimary} flex-1`} disabled={busy} onClick={() => onStart(false)}>
+        // Wraps instead of overflowing when the labels are long (e.g. in French).
+        <div className="flex flex-wrap gap-2">
+          <button type="button" className={`${btnPrimary} grow whitespace-nowrap`} disabled={busy} onClick={() => onStart(false)}>
             <Play size={16} aria-hidden /> {t('levelSelect.resume')}
           </button>
-          <button type="button" className={`${btnSecondary} ${btnSmall}`} disabled={busy} onClick={() => onStart(true)} aria-label={t('levelSelect.restartLabel', { number: level.number })}>
+          <button
+            type="button"
+            className={`${btnSecondary} ${btnSmall} grow whitespace-nowrap`}
+            disabled={busy}
+            onClick={() => onStart(true)}
+            aria-label={t('levelSelect.restartLabel', { number: level.number })}
+          >
             <RotateCcw size={14} aria-hidden /> {t('levelSelect.restart')}
           </button>
         </div>
