@@ -17,7 +17,7 @@ type NewEntry = LogEntry extends infer E ? (E extends LogEntry ? Omit<E, 'id'> :
 function FinishedBanner({ result }: { result: LevelFinished }) {
   const { t } = useTranslation();
   return (
-    <div role="status" className="flex flex-col gap-4 rounded-xl border border-emerald-700/60 bg-emerald-950/40 p-5 sm:flex-row sm:items-center">
+    <div role="status" className="flex shrink-0 flex-col gap-4 rounded-xl border border-emerald-700/60 bg-emerald-950/40 p-5 sm:flex-row sm:items-center">
       <Trophy size={32} className="shrink-0 text-amber-300" aria-hidden />
       <div className="flex-1">
         <p className="font-bold text-emerald-300">{t('play.complete')}</p>
@@ -68,7 +68,8 @@ export function Play() {
   const [historyIndex, setHistoryIndex] = useState<number | null>(null);
 
   const nextId = useRef(0);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const logRef = useRef<HTMLDivElement>(null);
+  const atBottom = useRef(true);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const push = useCallback((...entries: NewEntry[]) => {
@@ -115,9 +116,25 @@ export function Play() {
     };
   }, [push, pushError]);
 
+  // New output scrolls the log to its end. Only the log scrolls (scrollIntoView would also move the page).
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  }, [log]);
+    const el = logRef.current;
+    if (!el) return;
+    atBottom.current = true;
+    el.scrollTop = el.scrollHeight;
+  }, [log, busy]);
+
+  // When the log changes size (a banner appears, the window is resized), stay on the latest line,
+  // unless the player scrolled up to read older output.
+  useEffect(() => {
+    const el = logRef.current;
+    if (!el) return;
+    const observer = new ResizeObserver(() => {
+      if (atBottom.current) el.scrollTop = el.scrollHeight;
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const execute = async (line: string) => {
     const cmd = parseCommand(line, room?.exits ?? []);
@@ -221,15 +238,17 @@ export function Play() {
   };
 
   return (
-    <div className="space-y-4">
+    // Exactly one screen tall (minus the header and the page padding): the banner keeps its size and the
+    // terminal takes the rest, scrolling inside, so the command input always stays on screen.
+    <div className="flex h-[calc(100dvh-7rem)] min-h-[26rem] flex-col gap-4 md:h-[calc(100dvh-9rem)]">
       {finished && <FinishedBanner result={finished} />}
       {noActiveLevel && !finished && (
-        <div role="alert" className="rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-amber-200">
+        <div role="alert" className="shrink-0 rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-amber-200">
           <Trans i18nKey="play.noActiveLevel" components={{ a: <Link to="/level-select" className="font-bold text-quantum-400 underline" /> }} />
         </div>
       )}
 
-      <section aria-label={t('play.terminal')} className="flex h-[calc(100dvh-12rem)] min-h-[24rem] flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-2xl md:h-[calc(100dvh-10rem)]">
+      <section aria-label={t('play.terminal')} className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-2xl">
         <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900 px-3 py-2.5">
           <TerminalIcon size={16} className="shrink-0 text-quantum-400" aria-hidden />
           <span className="truncate font-mono text-xs text-slate-400">
@@ -241,12 +260,21 @@ export function Play() {
           </span>
         </div>
 
-        <div className="flex-1 space-y-3 overflow-y-auto p-4 font-mono text-sm md:p-6" role="log" aria-live="polite" onClick={() => inputRef.current?.focus()}>
+        <div
+          ref={logRef}
+          className="flex-1 space-y-3 overflow-y-auto p-4 font-mono text-sm md:p-6"
+          role="log"
+          aria-live="polite"
+          onClick={() => inputRef.current?.focus()}
+          onScroll={(e) => {
+            const el = e.currentTarget;
+            atBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+          }}
+        >
           {log.map((entry) => (
             <LogLine key={entry.id} entry={entry} />
           ))}
           {busy && <p className="animate-pulse text-slate-600">…</p>}
-          <div ref={bottomRef} />
         </div>
 
         <form onSubmit={submit} className="flex gap-2 border-t border-slate-800 bg-slate-900/50 p-3">
