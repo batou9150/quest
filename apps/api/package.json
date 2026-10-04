@@ -1,0 +1,26 @@
+{
+  "name": "@quest/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/server.ts",
+    "build": "node build.mjs",
+    "start": "node dist/server.js",
+    "levels:push": "tsx scripts/levels-push.ts"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^9.3.1",
+    "@hono/node-server": "^2.1.3",
+    "@quest/engine": "*",
+    "@quest/levels-demo": "*",
+    "@quest/shared": "*",
+    "arctic": "^3.7.0",
+    "hono": "^4.13.13",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/engine"
+    },
+    {
+      "path": "packages/shared"
+    },
+    {
+      "path": "packages/levels-demo"
+    },
+    {
+      "path": "apps/api"
+    },
+    {
+      "path": "apps/web"
+    }
+  ]
+}

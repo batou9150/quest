@@ -1,0 +1,24 @@
+{
+  "name": "quest",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "npm run dev --workspace @quest/api & npm run dev --workspace @quest/web",
+    "build": "npm run build --workspace @quest/web && npm run build --workspace @quest/api",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "levels:push": "npm run levels:push --workspace @quest/api --"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0",
+    "vitest": "^5.0.3"
+  }
+}

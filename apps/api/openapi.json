@@ -1,0 +1,852 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "The Quantum Quest Game API",
+    "version": "1.0.0",
+    "description": "Play The Quantum Quest over HTTP. Every call acts on your *active level*: start one from Level Select on the website first. Authenticate with `Authorization: ApiKey <your key>` (get a key on the API Access page).\n\nexamine, move, take, drop and use count as actions; look and inventory are free. Finishing a level in more actions than its par lowers its score. Calls are limited per user per minute (see the X-RateLimit-* headers)."
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "This server"
+    }
+  ],
+  "paths": {
+    "/game/look": {
+      "get": {
+        "summary": "Look",
+        "description": "Get the player's current location.\n\nReturns the current room, including its description, items, and exits.",
+        "operationId": "look",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Room"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The active level is already finished (level_finished)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/inventory": {
+      "get": {
+        "summary": "Inventory",
+        "description": "Get the player's current inventory.",
+        "operationId": "inventory",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The active level is already finished (level_finished)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/examine": {
+      "post": {
+        "summary": "Examine",
+        "description": "Allows the player to get a detailed description of an item or exit.",
+        "operationId": "examine",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamineRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamineResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the action failed in the game (unknown target, locked exit, ...)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/move": {
+      "post": {
+        "summary": "Move",
+        "description": "Move through an exit of the current room (e.g. `north`; `n`, `s`, `e`, `w`, `u`, `d` work too).\n\nReturns the new room, or a `FinalRoomResponse` with your score when the exit completes the level.",
+        "operationId": "move",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/Room"
+                    },
+                    {
+                      "$ref": "#/components/schemas/FinalRoomResponse"
+                    }
+                  ],
+                  "title": "Response Move"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the action failed in the game (unknown target, locked exit, ...)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/take": {
+      "post": {
+        "summary": "Take",
+        "description": "Take an item from the current room and add it to the player's inventory.",
+        "operationId": "take",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TakeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TakeResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the action failed in the game (unknown target, locked exit, ...)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/use": {
+      "post": {
+        "summary": "Use",
+        "description": "Use a thing, or two things on each other (`indirect_object`). Things can be items in your inventory, items in the room, or exits of the room.",
+        "operationId": "use",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UseRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UseResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the action failed in the game (unknown target, locked exit, ...)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/game/drop": {
+      "post": {
+        "summary": "Drop",
+        "description": "Drop an item from the player's inventory into the current room.",
+        "operationId": "drop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DropRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DropResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid body, or the action failed in the game (unknown target, locked exit, ...)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing, malformed or revoked API key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Account suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "No active level: start one from Level Select",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded; retry after the Retry-After header",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "DropRequest": {
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "title": "Itemname",
+            "description": "The name of the item to drop from the inventory."
+          }
+        },
+        "type": "object",
+        "required": [
+          "itemName"
+        ],
+        "title": "DropRequest"
+      },
+      "DropResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "A message describing the result of the drop."
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "DropResponse"
+      },
+      "ExamineRequest": {
+        "properties": {
+          "target": {
+            "type": "string",
+            "title": "Target",
+            "description": "The name of the item or exit to examine."
+          }
+        },
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "title": "ExamineRequest"
+      },
+      "ExamineResponse": {
+        "properties": {
+          "description": {
+            "type": "string",
+            "title": "Description"
+          }
+        },
+        "type": "object",
+        "required": [
+          "description"
+        ],
+        "title": "ExamineResponse"
+      },
+      "FinalRoomResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "A message congratulating the player on completing the level."
+          },
+          "score": {
+            "type": "integer",
+            "title": "Score",
+            "description": "The player's final score for the level."
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "score"
+        ],
+        "title": "FinalRoomResponse"
+      },
+      "InventoryResponse": {
+        "properties": {
+          "inventory": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Inventory",
+            "description": "The player's inventory."
+          }
+        },
+        "type": "object",
+        "required": [
+          "inventory"
+        ],
+        "title": "InventoryResponse"
+      },
+      "MoveRequest": {
+        "properties": {
+          "exit": {
+            "type": "string",
+            "title": "Exit",
+            "description": "The name of the exit to use."
+          }
+        },
+        "type": "object",
+        "required": [
+          "exit"
+        ],
+        "title": "MoveRequest"
+      },
+      "Room": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description"
+          },
+          "items": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Items",
+            "default": []
+          },
+          "exits": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Exits",
+            "default": []
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "description"
+        ],
+        "title": "Room"
+      },
+      "TakeRequest": {
+        "properties": {
+          "itemName": {
+            "type": "string",
+            "title": "Itemname",
+            "description": "The name of the item to take from the current room."
+          }
+        },
+        "type": "object",
+        "required": [
+          "itemName"
+        ],
+        "title": "TakeRequest"
+      },
+      "TakeResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "A message confirming the result of the take action."
+          },
+          "item": {
+            "type": "string",
+            "title": "Item",
+            "description": "The name of the item that was taken."
+          }
+        },
+        "type": "object",
+        "required": [
+          "message",
+          "item"
+        ],
+        "title": "TakeResponse"
+      },
+      "UseRequest": {
+        "properties": {
+          "direct_object": {
+            "type": "string",
+            "title": "Direct Object",
+            "description": "The identifier of the direct object. An object can be an item in your inventory, an item in the room, or an exit."
+          },
+          "indirect_object": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Indirect Object",
+            "description": "The identifier of the indirect object. If provided, the game attempts to use `direct_object` and `indirect_object` on each other."
+          }
+        },
+        "type": "object",
+        "required": [
+          "direct_object"
+        ],
+        "title": "UseRequest"
+      },
+      "UseResponse": {
+        "properties": {
+          "message": {
+            "type": "string",
+            "title": "Message",
+            "description": "A message describing the result of the use action."
+          }
+        },
+        "type": "object",
+        "required": [
+          "message"
+        ],
+        "title": "UseResponse"
+      },
+      "GameError": {
+        "type": "object",
+        "title": "GameError",
+        "required": [
+          "error",
+          "message"
+        ],
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Machine-readable code.",
+            "enum": [
+              "unknown_target",
+              "unknown_exit",
+              "locked",
+              "not_takeable",
+              "not_carrying",
+              "level_finished",
+              "no_active_level",
+              "unauthenticated",
+              "invalid_authorization",
+              "invalid_api_key",
+              "banned",
+              "rate_limited",
+              "invalid_request",
+              "invalid_json"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable explanation, safe to show to the player."
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "Authorization",
+        "description": "Value: `ApiKey <your key>`"
+      }
+    }
+  }
+}

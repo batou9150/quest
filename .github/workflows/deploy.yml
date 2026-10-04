@@ -1,0 +1,47 @@
+name: Deploy
+
+# Deploys main to Cloud Run. Never runs for pull requests, so forks cannot reach the GCP credentials.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+env:
+  REGION: europe-west1
+  SERVICE: quest
+  IMAGE: europe-west1-docker.pkg.dev/${{ vars.GCP_PROJECT_ID }}/quest/quest:${{ github.sha }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: read
+      id-token: write # Workload Identity Federation: no service-account key exists anywhere
+    steps:
+      - uses: actions/checkout@v7
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - run: gcloud auth configure-docker europe-west1-docker.pkg.dev --quiet
+      - run: docker build -t "$IMAGE" . && docker push "$IMAGE"
+      - name: Deploy to Cloud Run
+        # "^;^" makes ';' the separator, so ADMIN_EMAILS can contain commas.
+        run: |
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --service-account "quest-runtime@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com" \
+            --allow-unauthenticated \
+            --min-instances 0 \
+            --max-instances 3 \
+            --concurrency 80 \
+            --memory 512Mi \
+            --set-env-vars "^;^PUBLIC_URL=${{ vars.PUBLIC_URL }};ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }};GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }};GITHUB_CLIENT_ID=${{ vars.GITHUB_CLIENT_ID }}" \
+            --set-secrets "GOOGLE_CLIENT_SECRET=google-client-secret:latest,GITHUB_CLIENT_SECRET=github-client-secret:latest"

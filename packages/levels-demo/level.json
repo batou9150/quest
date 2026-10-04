@@ -1,0 +1,170 @@
+{
+  "id": "demo-ring",
+  "number": 1,
+  "title": "The Ring Beneath the Mountain",
+  "summary": "Tutorial level. Find your way from the briefing room to the ancient ring and open it.",
+  "points": 100,
+  "par": 14,
+  "penaltyPerAction": 2,
+  "world": {
+    "start": "briefing",
+    "rooms": {
+      "briefing": {
+        "name": "Briefing Room",
+        "description": "A windowless room deep inside the mountain. A long table, a dead projector, and the hum of air vents. A heavy door leads north.",
+        "items": ["tablet", "mug"],
+        "exits": {
+          "north": { "to": "corridor", "description": "The door to the main corridor of Level 28." }
+        }
+      },
+      "corridor": {
+        "name": "Level 28 Corridor",
+        "description": "A concrete corridor lit by caged bulbs. The equipment locker is east, the briefing room south. To the north, a reinforced door with a badge reader guards the control room.",
+        "descriptionWhen": [
+          { "flag": "ring_active", "text": "The floor trembles. Something below is awake." }
+        ],
+        "items": ["extinguisher"],
+        "exits": {
+          "south": { "to": "briefing", "description": "Back to the briefing room." },
+          "east": { "to": "armory", "description": "The equipment locker room. The door is ajar." },
+          "north": {
+            "to": "control",
+            "description": "A reinforced door. Its badge reader blinks red.",
+            "requires": { "inventory": ["badge"] },
+            "lockedMessage": "The badge reader blinks red. You need an access badge."
+          }
+        }
+      },
+      "armory": {
+        "name": "Equipment Locker",
+        "description": "Rows of grey lockers and a workbench covered in strange salvaged devices.",
+        "items": ["locker", "badge", "crystal"],
+        "exits": {
+          "west": { "to": "corridor", "description": "Back to the corridor." }
+        }
+      },
+      "control": {
+        "name": "Control Room",
+        "description": "Banks of screens look down through a thick window onto a huge stone ring in the chamber below. A dialing console sits in front of the window.",
+        "descriptionWhen": [
+          { "flag": "powered", "text": "The console glows with a steady blue light." },
+          { "flag": "ring_active", "text": "Below, the ring shimmers like the surface of a lake." }
+        ],
+        "items": ["console", "notebook"],
+        "exits": {
+          "south": { "to": "corridor", "description": "Back to the corridor." },
+          "down": { "to": "chamber", "description": "A metal staircase down to the ring chamber." }
+        }
+      },
+      "chamber": {
+        "name": "Ring Chamber",
+        "description": "A vast cavern carved out of the rock. In its centre stands a stone ring, three times your height, covered in carved symbols.",
+        "descriptionWhen": [
+          { "flag": "ring_active", "text": "The ring is open: a wall of rippling light fills it. You could step through the ring." }
+        ],
+        "items": ["ring"],
+        "exits": {
+          "up": { "to": "control", "description": "The staircase back to the control room." },
+          "ring": {
+            "finish": true,
+            "description": "The stone ring. Beyond it, if it ever opens, lies somewhere else entirely.",
+            "requires": { "flags": ["ring_active"] },
+            "lockedMessage": "You walk through the ring and come out the other side, still in the cavern. It is not active."
+          }
+        }
+      }
+    },
+    "items": {
+      "tablet": {
+        "name": "Mission Tablet",
+        "aliases": ["tablet"],
+        "description": "Your orders: \"Recruit, the ring must be opened today. Collect an access badge and the power crystal from the equipment locker, power the dialing console, enter the destination address from the glyph notebook, then step through. Good luck.\""
+      },
+      "mug": {
+        "name": "Coffee Mug",
+        "aliases": ["mug", "coffee"],
+        "description": "Cold coffee. Someone wrote \"WORLD'S OKAYEST SCIENTIST\" on it."
+      },
+      "extinguisher": {
+        "name": "Fire Extinguisher",
+        "aliases": ["extinguisher"],
+        "description": "Bolted to the wall. Inspected last month.",
+        "takeable": false,
+        "fixedMessage": "It is bolted to the wall."
+      },
+      "locker": {
+        "name": "Weapons Locker",
+        "aliases": ["locker", "lockers"],
+        "description": "Locked tight, and not your business today.",
+        "takeable": false,
+        "fixedMessage": "The locker is far too heavy."
+      },
+      "badge": {
+        "name": "Access Badge",
+        "aliases": ["badge", "card"],
+        "description": "A plastic badge with your photo. It opens the control room."
+      },
+      "crystal": {
+        "name": "Power Crystal",
+        "aliases": ["crystal"],
+        "description": "A hand-sized crystal, warm to the touch and faintly humming. It looks like it slots into something."
+      },
+      "notebook": {
+        "name": "Glyph Notebook",
+        "aliases": ["notebook", "glyphs"],
+        "description": "A worn notebook. On the last page, circled twice: seven symbols labelled \"first destination\"."
+      },
+      "console": {
+        "name": "Dialing Console",
+        "aliases": ["console", "dhd", "dial"],
+        "description": "A ring of carved symbols around a dark central dome. An empty socket on its side is shaped like a crystal.",
+        "takeable": false,
+        "fixedMessage": "The console is anchored to the floor."
+      },
+      "ring": {
+        "name": "Stone Ring",
+        "aliases": ["ring"],
+        "description": "Carved symbols run all around the ring. It is cold and silent.",
+        "takeable": false,
+        "fixedMessage": "It weighs hundreds of tonnes."
+      }
+    },
+    "rules": [
+      {
+        "use": "notebook",
+        "effects": [{ "setFlag": "address_known" }],
+        "message": "You study the seven circled symbols until you know them by heart."
+      },
+      {
+        "use": "crystal",
+        "on": "console",
+        "room": "control",
+        "effects": [{ "setFlag": "powered" }, { "removeItem": "crystal" }],
+        "message": "The crystal slides into the socket. The console hums and lights up blue."
+      },
+      {
+        "use": "console",
+        "room": "control",
+        "requires": { "flags": ["powered", "address_known"] },
+        "effects": [{ "setFlag": "ring_active" }],
+        "message": "You press the seven symbols, then the central dome. Below, the ring spins, locks, and bursts open in a wave of light."
+      },
+      {
+        "use": "console",
+        "room": "control",
+        "requires": { "notFlags": ["powered"] },
+        "message": "The console is dead. There is an empty socket on its side."
+      },
+      {
+        "use": "console",
+        "room": "control",
+        "requires": { "flags": ["powered"], "notFlags": ["address_known"] },
+        "message": "The console is powered, but you don't know which symbols to press."
+      },
+      {
+        "use": "mug",
+        "message": "Cold. You drink it anyway."
+      }
+    ]
+  }
+}
