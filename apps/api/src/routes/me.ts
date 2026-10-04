@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import { StartLevelSchema, UpdateProfileSchema, type LevelSummary, type Me, type NameSuggestions, type NewApiKey } from '@quest/shared';
 import { randomToken, requireUser, sha256 } from '../auth/session.ts';
-import { body, notFound, type AppEnv, type AuthedUser } from '../http.ts';
+import { body, gameLang, notFound, type AppEnv, type AuthedUser } from '../http.ts';
 import { paths, type ApiKeyDoc, type UserDoc } from '../models.ts';
 import { startLevel } from '../services/game.ts';
 import { loadProgress, summarize } from '../services/levels.ts';
@@ -50,7 +50,7 @@ me.get('/levels', async (c) => {
   const user = requireUser(c);
   const { db, levels } = c.get('deps');
   const progress = await loadProgress(db, user.id);
-  return c.json<LevelSummary[]>(summarize(await levels.published(), progress, user.doc.activeLevelId));
+  return c.json<LevelSummary[]>(summarize(await levels.published(), progress, user.doc.activeLevelId, gameLang(c)));
 });
 
 me.post('/levels/:id/start', async (c) => {
@@ -58,7 +58,12 @@ me.post('/levels/:id/start', async (c) => {
   const { reset } = await body(c, StartLevelSchema);
   const deps = c.get('deps');
   await startLevel(deps, user, c.req.param('id'), reset);
-  const summaries = summarize(await deps.levels.published(), await loadProgress(deps.db, user.id), c.req.param('id'));
+  const summaries = summarize(
+    await deps.levels.published(),
+    await loadProgress(deps.db, user.id),
+    c.req.param('id'),
+    gameLang(c),
+  );
   const level = summaries.find((l) => l.id === c.req.param('id'));
   if (!level) throw notFound('Level');
   return c.json<LevelSummary>(level);

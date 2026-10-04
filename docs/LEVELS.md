@@ -56,6 +56,35 @@ or with the *Upload level* button on the admin Levels page. New levels start unp
 
 Order rules from most to least specific: put the success rule first and hint rules ("the console is dead") after it, guarded with `notFlags`.
 
+## Translations
+
+Write the level in English, then add other languages under `locales`. A translation holds texts only: ids, exits, conditions, effects and rules stay in the English part, and anything left out is shown in English.
+
+```jsonc
+"locales": {
+  "fr": {
+    "title": "…", "summary": "…",
+    "rooms": {
+      "room-id": {
+        "name": "…", "description": "…",
+        "descriptionWhen": [{ "flag": "x", "text": "…" }],          // same order and flags as the room's
+        "exits": { "north": { "description": "…", "lockedMessage": "…" } }
+      }
+    },
+    "items": { "item-id": { "name": "…", "aliases": ["…"], "description": "…", "fixedMessage": "…" } },
+    "rules": [{ "message": "…" }, null, …]                          // same order as world.rules; null keeps English
+  }
+}
+```
+
+Players get a language with `?lang=fr` (or `Accept-Language: fr`) on `/game/*`; the website asks for its own language. The engine's own sentences ("Nothing happens.", "Taken: …") are translated too. What does not change:
+
+- Commands (`look`, `move`, `take`…) and **exit names** (`north`, `ring`) are the API: keep them in English. If an exit name means something, mention it in the description, e.g. `… franchir l'anneau (ring).`
+- Players can type an item's translated name and aliases **and** its English ones, so English bots keep working. Avoid a translated alias that matches another item of the level.
+- Translations are checked on upload: unknown rooms, items or exits, a `descriptionWhen` flag that does not match, or too many rules are errors.
+
+The demo levels are translated into French; their tests check that every text is translated and that each level can be solved with the French names.
+
 ## Checklist
 
 - Every room is reachable, and the finishing exit is reachable.

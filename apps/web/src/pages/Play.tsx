@@ -8,7 +8,7 @@ import { game, isLevelFinished, parseCommand, type LevelFinished, type Room } fr
 import { useApi } from '../lib/hooks';
 import { useMe } from '../lib/auth';
 import { formatNumber } from '../lib/format';
-import i18n from '../i18n';
+import i18n, { useLang } from '../i18n';
 import { LogLine, type LogEntry } from '../components/Terminal';
 import { btnPrimary } from '../components/ui';
 
@@ -55,7 +55,8 @@ function LoginLink() {
 export function Play() {
   const { t } = useTranslation();
   const { refresh } = useMe();
-  const { data: levels } = useApi<LevelSummary[]>('/api/levels');
+  const lang = useLang();
+  const { data: levels } = useApi<LevelSummary[]>(`/api/levels?lang=${lang}`);
   const activeLevel = levels?.find((l) => l.active);
 
   const [log, setLog] = useState<LogEntry[]>(() => [{ id: -1, kind: 'info', text: t('play.connecting') }]);

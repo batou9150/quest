@@ -1,5 +1,5 @@
-import type { Level } from '@quest/engine';
-import type { LevelStatus, LevelSummary } from '@quest/shared';
+import { localize, type Level } from '@quest/engine';
+import type { Lang, LevelStatus, LevelSummary } from '@quest/shared';
 import type { Db } from '../db/db.ts';
 import { paths, type LevelDoc, type ProgressDoc } from '../models.ts';
 
@@ -32,11 +32,15 @@ export class LevelCache {
   }
 }
 
-/** Level n is unlocked once the previous published level has been completed; the first is always open. */
+/**
+ * Level n is unlocked once the previous published level has been completed; the first is always open.
+ * Titles and summaries are in `lang` when the level is translated, else in English.
+ */
 export function summarize(
   levels: Level[],
   progress: Map<string, ProgressDoc>,
   activeLevelId: string | null,
+  lang: Lang,
 ): LevelSummary[] {
   return levels.map((level, i) => {
     const p = progress.get(level.id);
@@ -46,11 +50,12 @@ export function summarize(
     else if (p?.bestScore != null) status = 'PLAYED';
     else if (i === 0 || previous?.bestScore != null) status = 'AVAILABLE';
     else status = 'LOCKED';
+    const { title, summary } = localize(level, lang);
     return {
       id: level.id,
       number: level.number,
-      title: level.title,
-      summary: level.summary,
+      title,
+      summary,
       points: level.points,
       status,
       active: level.id === activeLevelId,

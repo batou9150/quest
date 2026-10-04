@@ -7,6 +7,7 @@ import { api, errorMessage } from '../lib/api';
 import { useApi } from '../lib/hooks';
 import { useMe } from '../lib/auth';
 import { formatNumber } from '../lib/format';
+import { useLang } from '../i18n';
 import { PageHeader } from '../components/PageHeader';
 import { Empty, ErrorMessage, InlineError, Loading } from '../components/Status';
 import { btnPrimary, btnSecondary, btnSmall } from '../components/ui';
@@ -91,7 +92,8 @@ function LevelCard({ level, onStart, busy }: { level: LevelSummary; onStart: (re
 }
 
 export function LevelSelect() {
-  const { data, error, loading, reload } = useApi<LevelSummary[]>('/api/levels');
+  const lang = useLang();
+  const { data, error, loading, reload } = useApi<LevelSummary[]>(`/api/levels?lang=${lang}`);
   const { me, refresh } = useMe();
   const navigate = useNavigate();
   const { t } = useTranslation();

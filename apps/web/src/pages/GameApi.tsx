@@ -134,6 +134,9 @@ export function GameApi() {
         <p className="text-sm text-slate-400">
           <Trans i18nKey="gameApi.errorsNote" components={{ code: <code className="font-mono text-slate-300" /> }} />
         </p>
+        <p className="text-sm text-slate-400">
+          <Trans i18nKey="gameApi.languageNote" components={{ code: <code className="font-mono text-slate-300" /> }} />
+        </p>
       </section>
 
       <div className="grid gap-6 md:grid-cols-5">

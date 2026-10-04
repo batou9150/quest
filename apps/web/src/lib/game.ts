@@ -1,4 +1,5 @@
 /** Game API (/game/*) types and calls. Described in /openapi.json, not in @quest/shared. */
+import { currentLang } from '../i18n';
 import { api } from './api';
 
 export interface Room {
@@ -19,15 +20,18 @@ export function isLevelFinished(result: MoveResult): result is LevelFinished {
   return 'score' in result && typeof result.score === 'number';
 }
 
+/** Game texts come back in the site language (commands and exit names stay in English). */
+const path = (verb: string) => `/game/${verb}?lang=${currentLang()}`;
+
 export const game = {
-  look: () => api<Room>('/game/look'),
-  inventory: () => api<{ inventory: string[] }>('/game/inventory'),
-  examine: (target: string) => api<{ description: string }>('/game/examine', { method: 'POST', body: { target } }),
-  move: (exit: string) => api<MoveResult>('/game/move', { method: 'POST', body: { exit } }),
-  take: (itemName: string) => api<{ message: string; item: string }>('/game/take', { method: 'POST', body: { itemName } }),
-  drop: (itemName: string) => api<{ message: string }>('/game/drop', { method: 'POST', body: { itemName } }),
+  look: () => api<Room>(path('look')),
+  inventory: () => api<{ inventory: string[] }>(path('inventory')),
+  examine: (target: string) => api<{ description: string }>(path('examine'), { method: 'POST', body: { target } }),
+  move: (exit: string) => api<MoveResult>(path('move'), { method: 'POST', body: { exit } }),
+  take: (itemName: string) => api<{ message: string; item: string }>(path('take'), { method: 'POST', body: { itemName } }),
+  drop: (itemName: string) => api<{ message: string }>(path('drop'), { method: 'POST', body: { itemName } }),
   use: (direct_object: string, indirect_object?: string) =>
-    api<{ message: string }>('/game/use', {
+    api<{ message: string }>(path('use'), {
       method: 'POST',
       body: indirect_object ? { direct_object, indirect_object } : { direct_object },
     }),

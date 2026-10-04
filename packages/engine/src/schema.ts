@@ -14,9 +14,11 @@ export const ExitSchema = z.object({
   to: id.optional(),
   /** Moving through this exit completes the level. */
   finish: z.boolean().default(false),
-  description: z.string().default('Nothing special.'),
+  /** Shown by `examine`; the engine says "Nothing special." in the player's language when omitted. */
+  description: z.string().optional(),
   requires: ConditionSchema.optional(),
-  lockedMessage: z.string().default('The way is blocked.'),
+  /** Shown when `requires` does not hold; "The way is blocked." when omitted. */
+  lockedMessage: z.string().optional(),
 });
 
 export const RoomSchema = z.object({
@@ -33,8 +35,8 @@ export const ItemSchema = z.object({
   aliases: z.array(z.string()).default([]),
   description: z.string().min(1),
   takeable: z.boolean().default(true),
-  /** Message when trying to take a non-takeable item. */
-  fixedMessage: z.string().default("It won't budge."),
+  /** Message when trying to take a non-takeable item; "It won't budge." when omitted. */
+  fixedMessage: z.string().optional(),
 });
 
 export const EffectSchema = z.union([
@@ -66,6 +68,46 @@ export const WorldSchema = z.object({
   rules: z.array(RuleSchema).default([]),
 });
 
+const lang = z.string().regex(/^[a-z]{2}$/, 'two-letter language code, e.g. fr');
+
+/**
+ * The texts of a level in another language, laid over the English ones: ids, exits, rules and effects
+ * (the game mechanics) are not repeated. Any text left out stays in English.
+ */
+export const LevelTextSchema = z.object({
+  title: z.string().min(1).optional(),
+  summary: z.string().optional(),
+  rooms: z
+    .record(
+      id,
+      z.object({
+        name: z.string().min(1).optional(),
+        description: z.string().min(1).optional(),
+        /** Same order as the room's `descriptionWhen`; each `flag` must match. */
+        descriptionWhen: z.array(z.object({ flag: id, text: z.string() })).default([]),
+        /** By exit name; exit names themselves are commands and are not translated. */
+        exits: z
+          .record(z.string(), z.object({ description: z.string().optional(), lockedMessage: z.string().optional() }))
+          .default({}),
+      }),
+    )
+    .default({}),
+  items: z
+    .record(
+      id,
+      z.object({
+        /** Players can type the translated name and aliases as well as the English ones. */
+        name: z.string().min(1).optional(),
+        aliases: z.array(z.string()).optional(),
+        description: z.string().min(1).optional(),
+        fixedMessage: z.string().optional(),
+      }),
+    )
+    .default({}),
+  /** Same order as `world.rules`: the message of each rule, or null to keep the English one. */
+  rules: z.array(z.object({ message: z.string().min(1) }).nullable()).default([]),
+});
+
 export const LevelSchema = z
   .object({
     id,
@@ -78,6 +120,8 @@ export const LevelSchema = z
     /** Points lost per counted action above par (never below 20% of `points`). */
     penaltyPerAction: z.number().int().nonnegative().default(5),
     world: WorldSchema,
+    /** Translations by language code, e.g. `{ "fr": { … } }`. */
+    locales: z.record(lang, LevelTextSchema).default({}),
   })
   .superRefine((level, ctx) => {
     const { world } = level;
@@ -100,6 +144,31 @@ export const LevelSchema = z
       }
       if (rule.room && !world.rooms[rule.room]) issue(`rule #${i} references unknown room "${rule.room}"`);
     }
+    for (const [code, text] of Object.entries(level.locales)) {
+      if (code === 'en') issue('locales.en: English is the base language, write it in the level itself');
+      for (const [roomId, room] of Object.entries(text.rooms)) {
+        const base = world.rooms[roomId];
+        if (!base) {
+          issue(`locales.${code}: unknown room "${roomId}"`);
+          continue;
+        }
+        if (room.descriptionWhen.length > base.descriptionWhen.length) {
+          issue(`locales.${code}.rooms.${roomId}: more descriptionWhen entries than the room has`);
+        }
+        room.descriptionWhen.forEach((d, i) => {
+          if (base.descriptionWhen[i] && base.descriptionWhen[i].flag !== d.flag) {
+            issue(`locales.${code}.rooms.${roomId}.descriptionWhen.${i}: flag "${d.flag}" should be "${base.descriptionWhen[i].flag}"`);
+          }
+        });
+        for (const dir of Object.keys(room.exits)) {
+          if (!base.exits[dir]) issue(`locales.${code}.rooms.${roomId}: unknown exit "${dir}"`);
+        }
+      }
+      for (const itemId of Object.keys(text.items)) {
+        if (!world.items[itemId]) issue(`locales.${code}: unknown item "${itemId}"`);
+      }
+      if (text.rules.length > world.rules.length) issue(`locales.${code}: more rules than the level has`);
+    }
   });
 
 export type Condition = z.infer<typeof ConditionSchema>;
@@ -109,6 +178,7 @@ export type ItemDef = z.infer<typeof ItemSchema>;
 export type Effect = z.infer<typeof EffectSchema>;
 export type Rule = z.infer<typeof RuleSchema>;
 export type World = z.infer<typeof WorldSchema>;
+export type LevelText = z.infer<typeof LevelTextSchema>;
 export type Level = z.infer<typeof LevelSchema>;
 
 export class LevelValidationError extends Error {

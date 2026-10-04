@@ -1,6 +1,7 @@
 /**
  * Website translations (English + French), bundled: no runtime fetching, no eval (strict CSP).
- * Game texts from the server (rooms, /game/* messages) and API error messages stay in English.
+ * Game texts from the server (rooms, items, /game/* messages) are requested in the site language with `?lang=`;
+ * game commands and API error messages stay in English.
  */
 import i18n from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';

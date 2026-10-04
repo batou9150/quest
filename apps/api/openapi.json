@@ -3,7 +3,7 @@
   "info": {
     "title": "The Quantum Quest Game API",
     "version": "1.0.0",
-    "description": "Play The Quantum Quest over HTTP. Every call acts on your *active level*: start one from Level Select on the website first. Authenticate with `Authorization: ApiKey <your key>` (get a key on the API Access page).\n\nexamine, move, take, drop and use count as actions; look and inventory are free. Finishing a level in more actions than its par lowers its score. Calls are limited per user per minute (see the X-RateLimit-* headers)."
+    "description": "Play The Quantum Quest over HTTP. Every call acts on your *active level*: start one from Level Select on the website first. Authenticate with `Authorization: ApiKey <your key>` (get a key on the API Access page).\n\nexamine, move, take, drop and use count as actions; look and inventory are free. Finishing a level in more actions than its par lowers its score. Calls are limited per user per minute (see the X-RateLimit-* headers).\n\nGame texts (rooms, items, messages) are in English, or in French with `?lang=fr` or the header `Accept-Language: fr`. Commands, exit names, error codes and error messages for non-game errors stay in English; item names can be typed in either language."
   },
   "servers": [
     {
@@ -83,6 +83,11 @@
           {
             "APIKeyHeader": []
           }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
+          }
         ]
       }
     },
@@ -156,6 +161,11 @@
         "security": [
           {
             "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
           }
         ]
       }
@@ -240,6 +250,11 @@
         "security": [
           {
             "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
           }
         ]
       }
@@ -333,6 +348,11 @@
           {
             "APIKeyHeader": []
           }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
+          }
         ]
       }
     },
@@ -416,6 +436,11 @@
         "security": [
           {
             "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
           }
         ]
       }
@@ -501,6 +526,11 @@
           {
             "APIKeyHeader": []
           }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
+          }
         ]
       }
     },
@@ -584,6 +614,11 @@
         "security": [
           {
             "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/Lang"
           }
         ]
       }
@@ -846,6 +881,21 @@
         "in": "header",
         "name": "Authorization",
         "description": "Value: `ApiKey <your key>`"
+      }
+    },
+    "parameters": {
+      "Lang": {
+        "name": "lang",
+        "in": "query",
+        "required": false,
+        "description": "Language of the game texts: `en` (default) or `fr`. Without it, the first supported language of the Accept-Language header is used. Texts a level does not translate stay in English.",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "en",
+            "fr"
+          ]
+        }
       }
     }
   }

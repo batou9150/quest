@@ -4,10 +4,10 @@ import { demoLevels } from './index.ts';
 
 const [theRing, theDustWorld, theDerelict] = demoLevels as [Level, Level, Level];
 
-function play(level: Level, commands: Command[], state: GameState = newGame(level)) {
+function play(level: Level, commands: Command[], state: GameState = newGame(level), lang = 'en') {
   const results: StepResult[] = [];
   for (const command of commands) {
-    const out = step(level, state, command);
+    const out = step(level, state, command, lang);
     state = out.state;
     results.push(out.result);
   }
@@ -58,6 +58,72 @@ describe('demo levels', () => {
     expect(state.finished).toBe(true);
     expect(state.actions).toBeLessThanOrEqual(level.par);
     expect(results.at(-1)).toMatchObject({ body: { score: level.points } });
+  });
+});
+
+/** The same solutions, typed with the French names. */
+const FRENCH_SOLUTIONS = new Map<Level, Command[]>([
+  [
+    theRing,
+    [
+      move('north'), move('east'), take("le badge d'accès"), take('cristal'), move('west'), move('north'),
+      take('carnet de glyphes'), use('carnet'), use('cristal', 'console'), use('console'), move('down'), move('ring'),
+    ],
+  ],
+  [
+    theDustWorld,
+    [
+      take('kit'), use('kit'), move('east'), take('corde'), use('gourde', 'puits'), move('west'), move('south'),
+      take('disque'), move('south'), use('disque', 'autel'), use('gravures'), take('cristal'), move('north'),
+      move('north'), use('cristal', 'piédestal'), use('piédestal'), move('ring'),
+    ],
+  ],
+  [
+    theDerelict,
+    [
+      take('pied-de-biche'), take('lampe'), use('pied-de-biche', 'trappe'), move('north'), move('west'), take('cellule'),
+      use('batterie', 'lampe'), move('east'), move('east'), move('down'), take('fusible'), move('up'),
+      use('fusible', 'réacteur'), use('vanne'), use('réacteur'), move('west'), move('north'), use('barre'), move('pod'),
+    ],
+  ],
+]);
+
+describe('demo levels in French', () => {
+  it.each(demoLevels.map((l) => [l.title, l] as const))('"%s" is fully translated', (_, level) => {
+    const fr = level.locales.fr!;
+    expect(fr.title).toBeTruthy();
+    expect(fr.summary).toBeTruthy();
+    for (const [roomId, room] of Object.entries(level.world.rooms)) {
+      const text = fr.rooms[roomId];
+      expect(text?.name, roomId).toBeTruthy();
+      expect(text?.description, roomId).toBeTruthy();
+      expect(text?.descriptionWhen.length, roomId).toBe(room.descriptionWhen.length);
+      for (const [dir, exit] of Object.entries(room.exits)) {
+        if (exit.description) expect(text?.exits[dir]?.description, `${roomId}.${dir}`).toBeTruthy();
+        if (exit.lockedMessage) expect(text?.exits[dir]?.lockedMessage, `${roomId}.${dir}`).toBeTruthy();
+      }
+    }
+    for (const [itemId, item] of Object.entries(level.world.items)) {
+      expect(fr.items[itemId]?.name, itemId).toBeTruthy();
+      expect(fr.items[itemId]?.description, itemId).toBeTruthy();
+      if (item.fixedMessage) expect(fr.items[itemId]?.fixedMessage, itemId).toBeTruthy();
+    }
+    expect(fr.rules.filter(Boolean)).toHaveLength(level.world.rules.length);
+  });
+
+  it.each(demoLevels.map((l) => [l.title, l] as const))('"%s" can be solved with the French names', (_, level) => {
+    const { state, results } = play(level, FRENCH_SOLUTIONS.get(level)!, newGame(level), 'fr');
+    expect(results.filter((r) => !r.ok)).toEqual([]);
+    expect(state.finished).toBe(true);
+    expect(results.at(-1)).toMatchObject({ body: { score: level.points, message: expect.stringContaining('Niveau terminé') } });
+  });
+
+  it('switches language mid-run', () => {
+    const solution = SOLUTIONS.get(theRing)!;
+    const half = play(theRing, solution.slice(0, 6));
+    const { state, results } = play(theRing, solution.slice(6), half.state, 'fr');
+    expect(state.finished).toBe(true);
+    expect(results.at(-2)).toMatchObject({ body: { name: "Salle de l'anneau" } });
   });
 });
 

@@ -95,8 +95,8 @@
     "eventsTitle": "Participez aux événements",
     "eventsText": "Des compétitions limitées dans le temps, avec classements en direct.",
     "whatIsTitle": "Qu'est-ce qu'un jeu d'aventure textuel ?",
-    "whatIsText": "Un jeu d'aventure textuel (ou <em>fiction interactive</em>) est un jeu où tout passe par le texte. Le jeu décrit où vous êtes et ce que vous voyez ; vous répondez par de courtes commandes comme <code>look</code>, <code>take lamp</code> ou <code>go north</code>. Dans The Quantum Quest, chacune de ces commandes est aussi un appel d'API : vous pouvez jouer à la main ou automatiser votre progression. Le jeu lui-même est en anglais.",
-    "transcriptLabel": "Exemple de partie (le jeu est en anglais)"
+    "whatIsText": "Un jeu d'aventure textuel (ou <em>fiction interactive</em>) est un jeu où tout passe par le texte. Le jeu décrit où vous êtes et ce que vous voyez ; vous répondez par de courtes commandes comme <code>look</code>, <code>take lamp</code> ou <code>go north</code>. Dans The Quantum Quest, chacune de ces commandes est aussi un appel d'API : vous pouvez jouer à la main ou automatiser votre progression. Les commandes se tapent en anglais, le jeu vous répond en français.",
+    "transcriptLabel": "Exemple de partie"
   },
   "about": {
     "title": "À propos de The Quantum Quest",
@@ -276,6 +276,7 @@
     "quickStart": "Démarrage rapide",
     "quickStartNote": "Lancez d'abord un niveau depuis <a>Choix du niveau</a>. L'API agit toujours sur votre <strong>niveau actif</strong> (le dernier que vous avez lancé ou repris), le même que dans le terminal web. Sans niveau actif, les appels de jeu répondent <code>409 no_active_level</code>.",
     "copyCommand": "Copier la commande",
+    "languageNote": "Les textes du jeu sont en anglais. Ajoutez <code>?lang=fr</code> à un appel (ou envoyez <code>Accept-Language: fr</code>) pour les recevoir en français. Les commandes, les noms de sorties et les codes d'erreur restent en anglais ; les noms d'objets fonctionnent dans les deux langues.",
     "errorsNote": "Les erreurs sont en JSON : <code>{ \"error\", \"message\" }</code> avec le statut 400 (cible inconnue, sortie verrouillée…), 401 (clé invalide), 409 (aucun niveau actif) ou 429 (trop de requêtes).",
     "endpoints": "Endpoints du jeu",
     "endpoint": {

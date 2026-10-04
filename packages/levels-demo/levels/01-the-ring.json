@@ -166,5 +166,121 @@
         "message": "Cold. You drink it anyway."
       }
     ]
+  },
+  "locales": {
+    "fr": {
+      "title": "L'Anneau sous la montagne",
+      "summary": "Niveau d'initiation. Rejoignez l'ancien anneau depuis la salle de briefing, et ouvrez-le.",
+      "rooms": {
+        "briefing": {
+          "name": "Salle de briefing",
+          "description": "Une pièce sans fenêtre au cœur de la montagne. Une longue table, un projecteur éteint et le ronronnement des ventilations. Une lourde porte mène au nord.",
+          "exits": { "north": { "description": "La porte du couloir principal du niveau 28." } }
+        },
+        "corridor": {
+          "name": "Couloir du niveau 28",
+          "description": "Un couloir de béton éclairé par des ampoules grillagées. Le vestiaire d'équipement est à l'est, la salle de briefing au sud. Au nord, une porte blindée munie d'un lecteur de badge garde la salle de contrôle.",
+          "descriptionWhen": [{ "flag": "ring_active", "text": "Le sol tremble. Quelque chose s'est réveillé en contrebas." }],
+          "exits": {
+            "south": { "description": "Retour à la salle de briefing." },
+            "east": { "description": "Le vestiaire d'équipement. La porte est entrouverte." },
+            "north": {
+              "description": "Une porte blindée. Son lecteur de badge clignote en rouge.",
+              "lockedMessage": "Le lecteur de badge clignote en rouge. Il vous faut un badge d'accès."
+            }
+          }
+        },
+        "armory": {
+          "name": "Vestiaire d'équipement",
+          "description": "Des rangées de casiers gris et un établi couvert d'étranges appareils de récupération.",
+          "exits": { "west": { "description": "Retour au couloir." } }
+        },
+        "control": {
+          "name": "Salle de contrôle",
+          "description": "Des rangées d'écrans dominent, derrière une épaisse vitre, un immense anneau de pierre dans la salle en contrebas. Une console de composition fait face à la vitre.",
+          "descriptionWhen": [
+            { "flag": "powered", "text": "La console brille d'une lumière bleue régulière." },
+            { "flag": "ring_active", "text": "En bas, l'anneau miroite comme la surface d'un lac." }
+          ],
+          "exits": {
+            "south": { "description": "Retour au couloir." },
+            "down": { "description": "Un escalier métallique descend vers la salle de l'anneau." }
+          }
+        },
+        "chamber": {
+          "name": "Salle de l'anneau",
+          "description": "Une vaste caverne taillée dans la roche. En son centre se dresse un anneau de pierre, trois fois plus haut que vous, couvert de symboles gravés.",
+          "descriptionWhen": [
+            { "flag": "ring_active", "text": "L'anneau est ouvert : un mur de lumière ondoyante le remplit. Vous pourriez franchir l'anneau (ring)." }
+          ],
+          "exits": {
+            "up": { "description": "L'escalier qui remonte à la salle de contrôle." },
+            "ring": {
+              "description": "L'anneau de pierre. Au-delà, s'il s'ouvre un jour, se trouve un tout autre endroit.",
+              "lockedMessage": "Vous traversez l'anneau et ressortez de l'autre côté, toujours dans la caverne. Il n'est pas actif."
+            }
+          }
+        }
+      },
+      "items": {
+        "tablet": {
+          "name": "Tablette de mission",
+          "aliases": ["tablette"],
+          "description": "Vos ordres : « Recrue, l'anneau doit être ouvert aujourd'hui. Récupérez un badge d'accès et le cristal d'énergie au vestiaire d'équipement, alimentez la console de composition, entrez l'adresse de destination notée dans le carnet de glyphes, puis franchissez l'anneau. Bonne chance. »"
+        },
+        "mug": {
+          "name": "Tasse à café",
+          "aliases": ["tasse", "café"],
+          "description": "Du café froid. Quelqu'un a écrit « SCIENTIFIQUE PLUTÔT CORRECT » dessus."
+        },
+        "extinguisher": {
+          "name": "Extincteur",
+          "aliases": ["extincteur"],
+          "description": "Fixé au mur. Contrôlé le mois dernier.",
+          "fixedMessage": "Il est boulonné au mur."
+        },
+        "locker": {
+          "name": "Casier d'armes",
+          "aliases": ["casier", "casiers"],
+          "description": "Bien fermé, et ce n'est pas votre affaire aujourd'hui.",
+          "fixedMessage": "Le casier est bien trop lourd."
+        },
+        "badge": {
+          "name": "Badge d'accès",
+          "aliases": ["badge", "carte"],
+          "description": "Un badge en plastique avec votre photo. Il ouvre la salle de contrôle."
+        },
+        "crystal": {
+          "name": "Cristal d'énergie",
+          "aliases": ["cristal"],
+          "description": "Un cristal de la taille d'une main, tiède et qui bourdonne doucement. Il semble fait pour s'insérer quelque part."
+        },
+        "notebook": {
+          "name": "Carnet de glyphes",
+          "aliases": ["carnet", "glyphes"],
+          "description": "Un carnet usé. Sur la dernière page, entourés deux fois : sept symboles annotés « première destination »."
+        },
+        "console": {
+          "name": "Console de composition",
+          "aliases": ["console", "cadran"],
+          "description": "Un cercle de symboles gravés autour d'un dôme central éteint. Sur le côté, une prise vide a la forme d'un cristal.",
+          "fixedMessage": "La console est ancrée au sol."
+        },
+        "ring": {
+          "name": "Anneau de pierre",
+          "aliases": ["anneau"],
+          "description": "Des symboles gravés courent tout autour de l'anneau. Il est froid et silencieux.",
+          "fixedMessage": "Il pèse des centaines de tonnes."
+        }
+      },
+      "rules": [
+        { "message": "Vous étudiez les sept symboles entourés jusqu'à les connaître par cœur." },
+        { "message": "Le cristal glisse dans la prise. La console bourdonne et s'illumine en bleu." },
+        { "message": "Vous appuyez sur les sept symboles, puis sur le dôme central. En bas, l'anneau tourne, se verrouille et s'ouvre dans une vague de lumière." },
+        { "message": "La console est éteinte. Il y a une prise vide sur son côté." },
+        { "message": "La console est alimentée, mais vous ne savez pas sur quels symboles appuyer." },
+        { "message": "Froid. Vous le buvez quand même." }
+      ]
+    }
   }
 }

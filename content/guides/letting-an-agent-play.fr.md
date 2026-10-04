@@ -21,7 +21,7 @@ summary: Donnez le jeu comme outils à un agent d'IA, laissez-le jouer un niveau
 
 > Tu joues à un jeu d'aventure textuel au moyen d'outils. Appelle d'abord `look`. Lis attentivement chaque description, utilise `examine` sur tout ce qui paraît inhabituel et ramasse les objets qui pourraient servir. Quand une action échoue, lis le message d'erreur : c'est un indice. Ton objectif est de quitter le niveau par sa sortie finale, en un minimum d'actions. `look` et `inventory` sont gratuites.
 
-Le jeu étant en anglais, vous pouvez aussi écrire ce prompt en anglais.
+Pour que le jeu réponde en français, ajoutez `?lang=fr` aux appels de vos outils ; sinon il répond en anglais, et le prompt peut l'être aussi.
 
 5. **Renvoyez les erreurs au modèle.** Quand un appel échoue, l'outil doit renvoyer `error` et `message` comme résultat, pas lever une exception. Le message est l'indice dont l'agent a besoin.
 6. **Limitez le nombre d'étapes.** Arrêtez la boucle après un nombre fixe d'appels d'outils (50 suffisent largement pour les niveaux de démonstration), pour qu'un agent perdu ne tourne pas indéfiniment.

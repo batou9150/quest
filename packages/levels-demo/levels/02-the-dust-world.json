@@ -197,5 +197,132 @@
         "message": "The pedestal is powered, but which symbols lead home? Somebody here must have written it down."
       }
     ]
+  },
+  "locales": {
+    "fr": {
+      "title": "Le Monde de poussière",
+      "summary": "Échoué de l'autre côté de l'anneau, sous un soleil brûlant. Trouvez de l'eau, puis le chemin du retour.",
+      "rooms": {
+        "platform": {
+          "name": "Plateforme de l'anneau",
+          "description": "Vous sortez en titubant de l'anneau sur une plateforme de pierre. Derrière vous, l'anneau se tait. Le sable s'étend à perte de vue sous deux soleils blancs. Un piédestal usé se dresse devant l'anneau. À l'est, des palmiers verts ondulent ; au sud, des dunes roulent jusqu'à l'horizon.",
+          "descriptionWhen": [
+            { "flag": "dialer_powered", "text": "Le piédestal brille d'un bleu régulier." },
+            { "flag": "home_dialed", "text": "L'anneau est de nouveau ouvert, sa surface ondoie. La maison n'est qu'à un pas, de l'autre côté de l'anneau (ring)." }
+          ],
+          "exits": {
+            "east": { "description": "Un chemin de pierres plates vers les palmiers." },
+            "south": {
+              "description": "Des dunes sans fin, qui miroitent de chaleur.",
+              "lockedMessage": "Trois pas dans les dunes, et la chaleur vous repousse. Vous ne les traverserez pas sans eau."
+            },
+            "ring": {
+              "description": "L'anneau qui vous a amené ici. Il ne mène chez vous que si quelqu'un compose l'adresse de la maison.",
+              "lockedMessage": "Vous traversez l'anneau de pierre inerte et ressortez de l'autre côté, toujours sur la plateforme."
+            }
+          }
+        },
+        "oasis": {
+          "name": "Oasis",
+          "description": "Un cercle de palmiers autour d'un vieux puits de pierre. L'ombre est une bénédiction.",
+          "exits": { "west": { "description": "Retour à la plateforme de l'anneau." } }
+        },
+        "dunes": {
+          "name": "Mer de dunes",
+          "description": "Des vagues de sable rouge à perte de vue. Tout près gisent les os à demi enfouis d'une créature immense. Un éclat de métal attire votre regard dans le sable. Loin au sud, une pyramide de pierre noire.",
+          "exits": {
+            "north": { "description": "Vos propres traces de pas, qui ramènent à l'anneau." },
+            "south": { "description": "La pyramide noire. Son entrée est un triangle sombre." }
+          }
+        },
+        "temple": {
+          "name": "Temple des Deux Soleils",
+          "description": "Une salle fraîche à l'intérieur de la pyramide. La lumière tombe d'un puits sur un autel de pierre creusé d'une cavité ronde. Le mur du fond est couvert de gravures.",
+          "descriptionWhen": [{ "flag": "altar_open", "text": "Le couvercle de l'autel a glissé sur le côté." }],
+          "exits": { "north": { "description": "Retour dehors, dans la lumière aveuglante." } }
+        }
+      },
+      "items": {
+        "kit": {
+          "name": "Kit de terrain",
+          "aliases": ["kit", "sac", "sac à dos"],
+          "description": "Votre kit de terrain réglementaire, toujours fermé. Quelque chose de métallique cliquette à l'intérieur. Utilisez-le pour le déballer."
+        },
+        "flask": {
+          "name": "Gourde vide",
+          "aliases": ["gourde", "bouteille"],
+          "description": "Une gourde en métal. Complètement sèche."
+        },
+        "full_flask": {
+          "name": "Gourde pleine",
+          "aliases": ["gourde", "bouteille", "eau"],
+          "description": "Une gourde en métal pleine de l'eau fraîche du puits. De quoi traverser les dunes."
+        },
+        "pedestal": {
+          "name": "Piédestal de composition",
+          "aliases": ["piédestal", "piedestal", "console", "cadran"],
+          "description": "Un piédestal de pierre cerclé de symboles, comme la console de la base, mais plus ancien. Une prise à cristal, sur son côté, est vide.",
+          "fixedMessage": "Il est taillé dans la plateforme elle-même."
+        },
+        "ring": {
+          "name": "Anneau de pierre",
+          "aliases": ["anneau"],
+          "description": "Le jumeau de l'anneau sous la montagne, usé par les tempêtes de sable.",
+          "fixedMessage": "Il pèse des centaines de tonnes."
+        },
+        "well": {
+          "name": "Puits de pierre",
+          "aliases": ["puits"],
+          "description": "Vous entendez l'eau tout au fond, bien plus bas que votre bras ne peut atteindre.",
+          "fixedMessage": "C'est un puits. Il reste où il est."
+        },
+        "rope": {
+          "name": "Corde effilochée",
+          "aliases": ["corde"],
+          "description": "Une longue corde, effilochée mais solide. Quelqu'un s'en servait pour tirer de l'eau."
+        },
+        "disc": {
+          "name": "Disque de bronze",
+          "aliases": ["disque", "métal", "metal"],
+          "description": "Un lourd disque de bronze gravé de deux soleils. Il fait exactement la taille de votre paume."
+        },
+        "bones": {
+          "name": "Os géants",
+          "aliases": ["os", "squelette", "créature"],
+          "description": "Les côtes à elles seules sont plus hautes que vous. Quoi que ce fût, cela n'a pas réussi à traverser les dunes non plus.",
+          "fixedMessage": "Même une seule côte est bien trop lourde."
+        },
+        "altar": {
+          "name": "Autel de pierre",
+          "aliases": ["autel"],
+          "description": "Un bloc de pierre noire. À son sommet, une cavité ronde gravée de deux soleils.",
+          "fixedMessage": "Il fait partie du temple."
+        },
+        "carving": {
+          "name": "Gravures murales",
+          "aliases": ["gravure", "gravures", "mur", "symboles"],
+          "description": "Des rangées de symboles. Un groupe est mis à part, encadré du dessin d'une montagne : une adresse. Celle de la maison, peut-être ?",
+          "fixedMessage": "Elles sont gravées dans le mur."
+        },
+        "crystal": {
+          "name": "Cristal solaire",
+          "aliases": ["cristal"],
+          "description": "Un cristal doré qui pulse d'une chaude lumière. Il irait bien dans une prise."
+        }
+      },
+      "rules": [
+        { "message": "Vous videz le kit de terrain : des rations, une carte de la mauvaise planète et une gourde vide. Vous gardez la gourde." },
+        { "message": "Vous attachez la gourde à la corde et la descendez dans l'obscurité. Elle remonte pleine d'eau froide." },
+        { "message": "L'eau est tout au fond. Votre bras en est loin." },
+        { "message": "Vous descendez la corde dans le puits. Elle remonte mouillée. Il vous faut de quoi contenir l'eau." },
+        { "message": "Vous buvez une petite gorgée. Mieux vaut garder le reste pour les dunes." },
+        { "message": "Le disque s'enclenche dans la cavité. La lumière du puits le frappe, et le couvercle de l'autel glisse en grinçant, révélant un cristal lumineux." },
+        { "message": "Vous suivez du doigt les symboles encadrés jusqu'à les connaître par cœur." },
+        { "message": "Le cristal glisse dans la prise. Le piédestal bourdonne et ses symboles s'illuminent." },
+        { "message": "Vous appuyez un à un sur les symboles du mur du temple. L'anneau tourne, se verrouille et jaillit en un bassin de lumière miroitante." },
+        { "message": "Les symboles sont éteints. La prise à cristal vide en dit long." },
+        { "message": "Le piédestal est alimenté, mais quels symboles mènent à la maison ? Quelqu'un, ici, a dû les noter." }
+      ]
+    }
   }
 }

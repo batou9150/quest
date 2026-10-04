@@ -66,7 +66,7 @@ export interface NewApiKey {
 
 // --- Levels -----------------------------------------------------------------
 
-/** GET /api/levels (logged in) */
+/** GET /api/levels?lang=fr (logged in): title and summary in `lang` when the level is translated. */
 export interface LevelSummary {
   id: string;
   number: number;
@@ -110,7 +110,10 @@ export interface LeaderboardEntry {
 
 // --- Languages ---------------------------------------------------------------
 
-/** Languages of the website and of guides. Game texts (levels) and API messages stay in English. */
+/**
+ * Languages of the website, guides and game texts (`?lang=` on /api/levels and /game/*).
+ * Game commands, exit names and API error messages stay in English.
+ */
 export const LANGS = ['en', 'fr'] as const;
 export type Lang = (typeof LANGS)[number];
 export const DEFAULT_LANG: Lang = 'en';

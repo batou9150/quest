@@ -60,7 +60,7 @@ curl -s "$QUEST_URL/game/look" -H "Authorization: ApiKey $QUEST_KEY"
 }
 ```
 
-Les textes du jeu (salles, objets, messages) sont en anglais.
+Les textes du jeu (salles, objets, messages) sont en anglais par défaut. Ajoutez `?lang=fr` à l'URL (ou envoyez l'en-tête `Accept-Language: fr`) pour les recevoir en français : `/game/look?lang=fr`. Les commandes, les noms de sorties (`north`, `ring`...) et les codes d'erreur restent en anglais ; les noms d'objets se tapent en français comme en anglais.
 
 ## 3. Agir
 

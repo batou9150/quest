@@ -71,3 +71,83 @@ describe('step', () => {
     expect(state.actions).toBe(1);
   });
 });
+
+describe('translations', () => {
+  const translated = {
+    ...base,
+    world: {
+      ...base.world,
+      rooms: {
+        ...base.world.rooms,
+        a: { ...base.world.rooms.a, descriptionWhen: [{ flag: 'lit', text: 'It is lit.' }] },
+      },
+      rules: [
+        { use: 'key', on: 'statue', effects: [{ setFlag: 'lit' }], message: 'The statue lights up.' },
+        { use: 'statue', message: 'It stares back.' },
+      ],
+    },
+    locales: {
+      fr: {
+        title: 'Minuscule',
+        rooms: {
+          a: { name: 'Salle A', descriptionWhen: [{ flag: 'lit', text: 'Elle est éclairée.' }] },
+          b: { exits: { west: { description: 'Vers la salle A.' } } },
+        },
+        items: { key: { name: 'Clé en laiton', aliases: ['clé'] } },
+        rules: [{ message: "La statue s'illumine." }],
+      },
+    },
+  };
+  const level = parseLevel(translated);
+
+  it('answers in the requested language, falling back to English for what is not translated', () => {
+    let state = newGame(level);
+    expect(step(level, state, { type: 'look' }, 'fr').result).toMatchObject({
+      body: { name: 'Salle A', description: 'A.', items: ['Clé en laiton', 'Statue'], exits: ['east'] },
+    });
+    state = step(level, state, { type: 'take', itemName: 'la clé' }, 'fr').state;
+    const use = step(level, state, { type: 'use', direct_object: 'key', indirect_object: 'statue' }, 'fr');
+    expect(use.result).toMatchObject({ body: { message: "La statue s'illumine." } });
+    expect(step(level, use.state, { type: 'look' }, 'fr').result).toMatchObject({ body: { description: 'A. Elle est éclairée.' } });
+    expect(step(level, use.state, { type: 'use', direct_object: 'statue' }, 'fr').result).toMatchObject({
+      body: { message: 'It stares back.' },
+    });
+  });
+
+  it('understands English and translated names, and keeps English for other languages', () => {
+    const state = newGame(level);
+    expect(step(level, state, { type: 'take', itemName: 'brass key' }, 'fr').result).toMatchObject({
+      body: { message: 'Pris : Clé en laiton.' },
+    });
+    expect(step(level, state, { type: 'take', itemName: 'key' }, 'de').result).toMatchObject({ body: { message: 'Taken: Brass Key.' } });
+  });
+
+  it('translates engine messages and default texts', () => {
+    const state = newGame(level);
+    expect(step(level, state, { type: 'take', itemName: 'statue' }, 'fr').result).toMatchObject({
+      error: 'not_takeable',
+      message: 'Impossible de le déplacer.',
+    });
+    expect(step(level, state, { type: 'move', exit: 'up' }, 'fr').result).toMatchObject({
+      error: 'unknown_exit',
+      message: "Impossible d'aller « up ». Sorties : east.",
+    });
+    expect(step(level, state, { type: 'examine', target: 'east' }, 'fr').result).toMatchObject({
+      body: { description: 'Rien de particulier.' },
+    });
+    expect(step(level, state, { type: 'examine', target: 'autour' }, 'fr').result).toMatchObject({ body: { description: 'A.' } });
+  });
+
+  it('reports translations that do not match the level', () => {
+    const broken = structuredClone(translated) as any;
+    broken.locales.fr.rooms.ghost = { name: 'Fantôme' };
+    broken.locales.fr.rooms.a.descriptionWhen[0].flag = 'dark';
+    broken.locales.fr.rooms.b.exits.north = { description: '?' };
+    broken.locales.fr.items.ghost = { name: 'Fantôme' };
+    broken.locales.fr.rules = [null, null, { message: 'Trop.' }];
+    broken.locales.en = {};
+    expect(() => parseLevel(broken)).toThrow(
+      /flag "dark" should be "lit"[\s\S]*unknown exit "north"[\s\S]*unknown room "ghost"[\s\S]*unknown item "ghost"[\s\S]*more rules[\s\S]*English is the base/,
+    );
+  });
+});

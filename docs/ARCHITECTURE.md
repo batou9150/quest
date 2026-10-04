@@ -38,7 +38,7 @@ No Firebase products: the browser never talks to Firestore, only to the API.
 | Level content | Only the three demo levels are in this repo; real levels are uploaded through the admin API | The repo is public; level files are the answer key |
 | Admin | `/api/admin/*` + admin pages, for users with `role: "admin"` | Roles, bans, levels, events, guides |
 | Starter content | The demo levels and `content/guides/*.md` are added at startup when missing | A fresh install is playable and documented; admins can edit them afterwards |
-| Languages | Website and guides in English and French; game texts (levels) and API messages in English | Translating levels would change the level format, the engine and every API answer; the guides and UI carry most of the reading |
+| Languages | Website, guides and game texts in English and French. A level carries its translations in `locales`, laid over the English texts; `/game/*` and `/api/levels` take `?lang=` or `Accept-Language`. Commands, exit names, error codes and API error messages stay in English | Commands and exit names are the API that bots and agents call: one vocabulary for everyone. A translation that is missing falls back to English, and a run can change language at any time since the game state only holds ids |
 
 ## Code layout
 

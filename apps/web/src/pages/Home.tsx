@@ -1,16 +1,42 @@
 import { Link } from 'react-router';
 import { ArrowRight, Bot, Terminal, Trophy } from 'lucide-react';
 import { Trans, useTranslation } from 'react-i18next';
+import type { Lang } from '@quest/shared';
+import { useLang } from '../i18n';
 import { useMe } from '../lib/auth';
 import { QuantumVisual } from '../components/QuantumVisual';
 import { btnPrimary, btnSecondary } from '../components/ui';
 
-/** A sample of real game output: the game itself is in English, so this transcript stays English in every language. */
-const transcript: { cmd: string; out: string }[] = [
-  { cmd: 'look', out: 'Briefing Room. A windowless room deep inside the mountain. A heavy door leads north. You see: tablet, mug.' },
-  { cmd: 'take tablet', out: 'You pick up the tablet. Its screen flickers to life.' },
-  { cmd: 'examine tablet', out: 'A ruggedised tablet. The last message reads: "The badge is in the locker. Hurry."' },
-  { cmd: 'go north', out: 'Level 28 Corridor. Caged bulbs hum overhead. Exits: south, east, north.' },
+/** A sample of game output, in the site language like the game itself; commands are always typed in English. */
+const transcript: { cmd: string; out: Record<Lang, string> }[] = [
+  {
+    cmd: 'look',
+    out: {
+      en: 'Briefing Room. A windowless room deep inside the mountain. A heavy door leads north. You see: tablet, mug.',
+      fr: 'Salle de briefing. Une pièce sans fenêtre au cœur de la montagne. Une lourde porte mène au nord. Vous voyez : tablette, tasse.',
+    },
+  },
+  {
+    cmd: 'take tablet',
+    out: {
+      en: 'You pick up the tablet. Its screen flickers to life.',
+      fr: "Vous prenez la tablette. Son écran s'allume en clignotant.",
+    },
+  },
+  {
+    cmd: 'examine tablet',
+    out: {
+      en: 'A ruggedised tablet. The last message reads: "The badge is in the locker. Hurry."',
+      fr: 'Une tablette renforcée. Le dernier message dit : « Le badge est dans le casier. Faites vite. »',
+    },
+  },
+  {
+    cmd: 'go north',
+    out: {
+      en: 'Level 28 Corridor. Caged bulbs hum overhead. Exits: south, east, north.',
+      fr: 'Couloir du niveau 28. Des ampoules grillagées bourdonnent au plafond. Sorties : south, east, north.',
+    },
+  },
 ];
 
 const features = [
@@ -21,6 +47,7 @@ const features = [
 
 export function Home() {
   const { t } = useTranslation();
+  const lang = useLang();
   const { me } = useMe();
   return (
     <div className="space-y-16">
@@ -67,14 +94,16 @@ export function Home() {
             <p className="mb-4 leading-relaxed text-slate-400">
               <Trans i18nKey="home.whatIsText" components={{ em: <em />, code: <code className="font-mono text-quantum-300" /> }} />
             </p>
-            <div lang="en" aria-label={t('home.transcriptLabel')} role="group" className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 font-mono text-sm">
+            <div aria-label={t('home.transcriptLabel')} role="group" className="overflow-x-auto rounded-lg border border-slate-800 bg-slate-950 p-4 font-mono text-sm">
               {transcript.map(({ cmd, out }) => (
                 <div key={cmd} className="mb-2 last:mb-0">
                   <div>
                     <span className="mr-2 text-emerald-400">$</span>
-                    <span className="text-slate-200">{cmd}</span>
+                    <span lang="en" className="text-slate-200">
+                      {cmd}
+                    </span>
                   </div>
-                  <div className="text-slate-500">{out}</div>
+                  <div className="text-slate-500">{out[lang]}</div>
                 </div>
               ))}
             </div>

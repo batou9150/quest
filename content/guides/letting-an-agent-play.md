@@ -23,7 +23,7 @@ In step 2 the LLM wrote code and you ran it. Now the LLM decides: it chooses whi
 
 > You are playing a text adventure through tools. Call `look` first. Read every description carefully, `examine` anything unusual, and pick up items that might be useful. When an action fails, read the error message: it is a hint. Your goal is to leave the level through its final exit, using as few actions as possible. `look` and `inventory` are free.
 
-The game is in English, so the prompt can be in English too.
+The game answers in English unless your tools add `?lang=fr` to their calls for French, so the prompt can be in English too.
 
 5. **Return errors to the model.** When a call fails, the tool should return the `error` and `message` as its result, not throw. The message is the hint the agent needs.
 6. **Cap the steps.** Stop the loop after a fixed number of tool calls (50 is plenty for the demo levels) so a confused agent cannot run forever.

@@ -241,5 +241,168 @@
         "message": "You flip back through the pages. Diagrams of the reactor, a list of crew, and a drawing of a ring just like yours."
       }
     ]
+  },
+  "locales": {
+    "fr": {
+      "title": "L'Épave",
+      "summary": "L'anneau vous dépose dans le hangar d'un vaisseau extraterrestre mort. Ramenez-le à la vie juste le temps de repartir.",
+      "rooms": {
+        "hangar": {
+          "name": "Hangar dévasté",
+          "description": "Un immense hangar, éclairé seulement par l'anneau que vous venez de franchir, qui s'éteint déjà. Du métal tordu partout. L'air est froid et sent la poussière. Dans le mur nord, une trappe coincée.",
+          "descriptionWhen": [{ "flag": "hatch_open", "text": "La trappe pend, ouverte, tordue là où vous l'avez forcée." }],
+          "exits": {
+            "north": {
+              "description": "Une lourde trappe au bord gondolé. Elle est coincée, entrouverte d'un doigt.",
+              "lockedMessage": "La trappe est coincée. Si seulement vous aviez de quoi faire levier."
+            }
+          }
+        },
+        "corridor": {
+          "name": "Couloir principal",
+          "description": "Un long couloir aux parois nervurées. De faibles bandes d'urgence rouges luisent le long du sol. Un panneau calciné pend du mur. Des portes mènent à l'ouest et à l'est ; tout au bout, au nord, une cloison étanche scellée.",
+          "descriptionWhen": [{ "flag": "power_on", "text": "Des lumières s'allument en clignotant au plafond. La cloison au nord a coulissé." }],
+          "exits": {
+            "south": { "description": "Retour au hangar." },
+            "west": { "description": "Une porte marquée d'un symbole qui ressemble à une silhouette endormie." },
+            "east": {
+              "description": "Au-delà de cette porte, l'obscurité totale. Vous entendez un bourdonnement sourd.",
+              "lockedMessage": "Vous faites deux pas dans la pièce plongée dans le noir, vous cognez le tibia contre quelque chose de tranchant et battez en retraite. Il vous faut de la lumière."
+            },
+            "north": {
+              "description": "Une cloison massive marquée du symbole d'un œil. Aucune énergie ne lui parvient.",
+              "lockedMessage": "La cloison ne bouge pas. Le vaisseau n'a pas d'énergie."
+            }
+          }
+        },
+        "quarters": {
+          "name": "Quartiers de l'équipage",
+          "description": "Des rangées de couchettes vides, faites pour des êtres plus grands que vous. Des effets personnels flottent dans la poussière, comme abandonnés à la hâte.",
+          "exits": { "east": { "description": "Retour au couloir." } }
+        },
+        "engine": {
+          "name": "Salle des machines",
+          "description": "Le cœur du vaisseau : une haute colonne de réacteur, froide et silencieuse. Une grosse vanne rouge dépasse d'un tuyau à côté. Une échelle descend.",
+          "descriptionWhen": [
+            { "flag": "coolant_open", "text": "Le liquide de refroidissement gargouille dans les tuyaux." },
+            { "flag": "fuse_in", "text": "Un fusible neuf brille à la base du réacteur." },
+            { "flag": "power_on", "text": "Le réacteur bourdonne d'une lumière bleue." }
+          ],
+          "exits": {
+            "west": { "description": "Retour au couloir." },
+            "down": { "description": "Une échelle vers la soute." }
+          }
+        },
+        "cargo": {
+          "name": "Soute",
+          "description": "Des caisses empilées jusqu'au plafond, beaucoup éventrées. Votre lampe projette de longues ombres.",
+          "exits": { "up": { "description": "L'échelle qui remonte à la salle des machines." } }
+        },
+        "bridge": {
+          "name": "Passerelle",
+          "description": "Un dôme de verre ouvert sur un champ d'étoiles. Au centre, la barre : un cercle de commandes lumineuses. Sur le côté, une petite porte ronde marquée du symbole d'une graine : la capsule de sauvetage (pod).",
+          "descriptionWhen": [{ "flag": "pod_armed", "text": "La porte de la capsule de sauvetage est ouverte, ses voyants de lancement clignotent en vert." }],
+          "exits": {
+            "south": { "description": "Retour dans le couloir." },
+            "pod": {
+              "description": "Une capsule tout juste assez grande pour une personne. Sa porte se commande depuis la barre.",
+              "lockedMessage": "La porte de la capsule est scellée. Elle doit être libérée depuis la barre."
+            }
+          }
+        }
+      },
+      "items": {
+        "crowbar": {
+          "name": "Pied-de-biche",
+          "aliases": ["pied-de-biche", "pied de biche", "levier"],
+          "description": "Une tige de métal extraterrestre, recourbée à un bout. Un levier parfait."
+        },
+        "lamp": {
+          "name": "Lampe éteinte",
+          "aliases": ["lampe", "torche", "lumière"],
+          "description": "Une lampe à main de conception extraterrestre. Son logement de batterie est vide."
+        },
+        "lit_lamp": {
+          "name": "Lampe allumée",
+          "aliases": ["lampe", "torche", "lumière"],
+          "description": "La lampe projette un puissant faisceau blanc."
+        },
+        "hatch": {
+          "name": "Trappe coincée",
+          "aliases": ["trappe", "porte"],
+          "description": "Une lourde trappe, coincée, entrouverte d'un doigt. Quelque chose de plat pourrait passer dans l'interstice.",
+          "fixedMessage": "Elle fait partie du vaisseau."
+        },
+        "panel": {
+          "name": "Panneau calciné",
+          "aliases": ["panneau"],
+          "description": "Un panneau mural noirci par le feu. Sous la suie, vous lisez, en pictogrammes du vaisseau : une goutte d'eau, puis un éclair, puis le réacteur. D'abord le refroidissement, puis le fusible... ou l'inverse ? Le milieu a brûlé.",
+          "fixedMessage": "Il est soudé au mur."
+        },
+        "battery": {
+          "name": "Cellule d'énergie",
+          "aliases": ["cellule", "batterie", "pile"],
+          "description": "Un petit cylindre lumineux, encore chargé. On dirait qu'il va dans une lampe à main."
+        },
+        "journal": {
+          "name": "Journal de bord",
+          "aliases": ["journal", "carnet", "livre"],
+          "description": "La dernière entrée, en pictogrammes du vaisseau : « Fusible grillé. Fusibles de rechange dans la soute. Rappel : refroidissement AVANT l'allumage, sinon le réacteur se coupe tout seul. »"
+        },
+        "bunks": {
+          "name": "Couchettes",
+          "aliases": ["couchettes", "couchette", "lits", "lit"],
+          "description": "Longues, étroites et vides. Personne n'a dormi ici depuis très longtemps.",
+          "fixedMessage": "Elles sont boulonnées au sol."
+        },
+        "reactor": {
+          "name": "Colonne du réacteur",
+          "aliases": ["réacteur", "reacteur", "colonne", "cœur", "coeur"],
+          "description": "Une colonne de cristal et de métal qui monte jusqu'au plafond. À sa base, une prise de fusible calcinée et un interrupteur d'allumage.",
+          "fixedMessage": "Certainement pas."
+        },
+        "valve": {
+          "name": "Vanne de refroidissement",
+          "aliases": ["vanne", "refroidissement", "vanne rouge"],
+          "description": "Une grosse roue rouge sur un tuyau marqué du symbole de la goutte d'eau.",
+          "fixedMessage": "Elle fait partie du tuyau."
+        },
+        "fuse": {
+          "name": "Fusible de rechange",
+          "aliases": ["fusible"],
+          "description": "Un épais fusible de cristal, encore dans son emballage."
+        },
+        "crates": {
+          "name": "Caisses",
+          "aliases": ["caisses", "caisse", "boîtes"],
+          "description": "Pour la plupart éventrées et vides. Peint au pochoir dessus : le même symbole d'éclair que sur la prise de fusible du réacteur.",
+          "fixedMessage": "Bien trop lourdes, et de toute façon presque vides."
+        },
+        "helm": {
+          "name": "Barre",
+          "aliases": ["barre de pilotage", "commandes", "gouvernail"],
+          "description": "Un cercle de commandes autour d'une sphère centrale. L'une d'elles porte le symbole de graine de la capsule de sauvetage.",
+          "fixedMessage": "Elle fait partie de la passerelle."
+        },
+        "chair": {
+          "name": "Fauteuil du capitaine",
+          "aliases": ["fauteuil", "siège", "trône"],
+          "description": "Un haut fauteuil tourné vers les étoiles. Celui qui s'y asseyait est parti il y a très longtemps.",
+          "fixedMessage": "Il est boulonné. Et on ne s'assoit pas dans le fauteuil du capitaine."
+        }
+      },
+      "rules": [
+        { "message": "Vous coincez le pied-de-biche dans l'interstice et tirez de toutes vos forces. Dans un hurlement de métal, la trappe s'ouvre." },
+        { "message": "La cellule s'enclenche dans la lampe. Un puissant faisceau blanc perce l'obscurité." },
+        { "message": "Vous balayez les alentours du faisceau. De la poussière, des ombres, et rien que vous ne sachiez déjà." },
+        { "message": "Vous tournez la roue de toutes vos forces. Le liquide de refroidissement gargouille dans les tuyaux autour du réacteur." },
+        { "message": "Vous insérez le fusible de rechange dans la prise. Il s'allume, en attente." },
+        { "message": "Vous basculez l'allumage. Le réacteur rugit, puis s'installe dans un bourdonnement profond. Partout dans le vaisseau, les lumières s'allument et les portes se déverrouillent." },
+        { "message": "Vous basculez l'allumage. Rien. La prise de fusible est grillée." },
+        { "message": "Vous basculez l'allumage. Le réacteur s'embrase, les alarmes hurlent, et il se coupe tout seul dans un nuage de vapeur. Il faut d'abord le refroidir." },
+        { "message": "Vous appuyez sur le symbole de la graine. Une voix parle dans une langue que vous ne connaissez pas, et la porte de la capsule de sauvetage s'ouvre en sifflant." },
+        { "message": "Vous feuilletez les pages. Des schémas du réacteur, une liste d'équipage, et le dessin d'un anneau en tout point semblable au vôtre." }
+      ]
+    }
   }
 }

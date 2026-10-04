@@ -125,6 +125,26 @@ describe('game API', () => {
     expect((await agent('look')).status).toBe(400);
   });
 
+  it('answers in the language asked with ?lang= or Accept-Language, English otherwise', async () => {
+    const { login } = await setup();
+    const { call } = await login('Ada');
+    await call(`/api/levels/${demoLevel.id}/start`, { body: { reset: false } });
+
+    expect(await (await call('/game/look?lang=fr')).json()).toMatchObject({ name: 'Salle de briefing', items: ['Tablette de mission', 'Tasse à café'] });
+    expect(await (await call('/game/look', { headers: { 'Accept-Language': 'fr-FR,fr;q=0.9,en;q=0.8' } })).json()).toMatchObject({
+      name: 'Salle de briefing',
+    });
+    expect(await (await call('/game/look?lang=xx', { headers: { 'Accept-Language': 'de' } })).json()).toMatchObject({ name: 'Briefing Room' });
+    const take = await call('/game/take?lang=fr', { body: { itemName: 'mug' } });
+    expect(await take.json()).toMatchObject({ message: 'Pris : Tasse à café.', item: 'Tasse à café' });
+    const missing = await call('/game/take?lang=fr', { body: { itemName: 'licorne' } });
+    expect(await missing.json()).toMatchObject({ error: 'unknown_target', message: 'Vous ne voyez pas de « licorne » ici.' });
+
+    const [level] = (await (await call('/api/levels?lang=fr')).json()) as LevelSummary[];
+    expect(level).toMatchObject({ title: "L'Anneau sous la montagne", status: 'IN_PROGRESS' });
+    expect(((await (await call('/api/levels')).json()) as LevelSummary[])[0]!.title).toBe(demoLevel.title);
+  });
+
   it('revokes the previous API key when a new one is generated', async () => {
     const { app, login } = await setup();
     const { call } = await login('Ada');

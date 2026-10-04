@@ -1,3 +1,4 @@
+import { localize, messagesFor, type Messages } from './i18n.ts';
 import type { Condition, Effect, Level, World } from './schema.ts';
 
 export interface GameState {
@@ -55,14 +56,21 @@ export function scoreFor(level: Level, actions: number): number {
   return Math.max(floor, level.points - Math.max(0, actions - level.par) * level.penaltyPerAction);
 }
 
-/** Applies one command. Never mutates `state`; returns the next state and the response body or error. */
-export function step(level: Level, state: GameState, command: Command): { state: GameState; result: StepResult } {
-  if (state.finished) {
-    return { state, result: fail('level_finished', 'This level is complete. Start it again from Level Select to replay.') };
-  }
+/**
+ * Applies one command, answering in `lang` (see `localize`). Never mutates `state`;
+ * returns the next state and the response body or error.
+ */
+export function step(
+  level: Level,
+  state: GameState,
+  command: Command,
+  lang = 'en',
+): { state: GameState; result: StepResult } {
+  const msg = messagesFor(lang);
+  if (state.finished) return { state, result: fail('level_finished', msg.levelFinished) };
   const next = structuredClone(state);
   if (COUNTED.has(command.type)) next.actions += 1;
-  const result = run(level, next, command);
+  const result = run(localize(level, lang), msg, next, command);
   return { state: next, result };
 }
 
@@ -77,7 +85,7 @@ export function viewRoom(world: World, state: GameState): RoomView {
   };
 }
 
-function run(level: Level, state: GameState, command: Command): StepResult {
+function run(level: Level, msg: Messages, state: GameState, command: Command): StepResult {
   const { world } = level;
   switch (command.type) {
     case 'look':
@@ -92,24 +100,24 @@ function run(level: Level, state: GameState, command: Command): StepResult {
       const itemId = findItem(world, query, [...state.inventory, ...roomItems(state)]);
       if (itemId) return ok({ description: world.items[itemId]!.description });
       const exitKey = findExit(room.exits, query);
-      if (exitKey) return ok({ description: room.exits[exitKey]!.description });
-      if (query === 'room' || query === 'around' || query === normalize(room.name)) {
+      if (exitKey) return ok({ description: room.exits[exitKey]!.description ?? msg.nothingSpecial });
+      if ([...messagesFor('en').roomWords, ...msg.roomWords, normalize(room.name)].includes(query)) {
         return ok({ description: viewRoom(world, state).description });
       }
-      return fail('unknown_target', `You don't see any "${command.target}" here.`);
+      return fail('unknown_target', msg.notHere(command.target));
     }
 
     case 'move': {
       const room = world.rooms[state.roomId]!;
       const exitKey = findExit(room.exits, normalize(command.exit));
-      if (!exitKey) return fail('unknown_exit', `You can't go "${command.exit}". Exits: ${Object.keys(room.exits).join(', ') || 'none'}.`);
+      if (!exitKey) return fail('unknown_exit', msg.noExit(command.exit, Object.keys(room.exits)));
       const exit = room.exits[exitKey]!;
-      if (exit.requires && !holds(exit.requires, state)) return fail('locked', exit.lockedMessage);
+      if (exit.requires && !holds(exit.requires, state)) return fail('locked', exit.lockedMessage ?? msg.wayBlocked);
       if (exit.finish) {
         state.finished = true;
         state.score = scoreFor(level, state.actions);
         return ok({
-          message: `You step through and leave "${level.title}" behind. Level complete in ${state.actions} actions.`,
+          message: msg.complete(level.title, state.actions),
           score: state.score,
         });
       }
@@ -122,31 +130,31 @@ function run(level: Level, state: GameState, command: Command): StepResult {
       const itemId = findItem(world, normalize(command.itemName), here);
       if (!itemId) {
         if (findItem(world, normalize(command.itemName), state.inventory)) {
-          return fail('unknown_target', 'You already carry that.');
+          return fail('unknown_target', msg.alreadyCarried);
         }
-        return fail('unknown_target', `You don't see any "${command.itemName}" here.`);
+        return fail('unknown_target', msg.notHere(command.itemName));
       }
       const item = world.items[itemId]!;
-      if (!item.takeable) return fail('not_takeable', item.fixedMessage);
+      if (!item.takeable) return fail('not_takeable', item.fixedMessage ?? msg.wontBudge);
       state.roomItems[state.roomId] = here.filter((id) => id !== itemId);
       state.inventory.push(itemId);
-      return ok({ message: `Taken: ${item.name}.`, item: item.name });
+      return ok({ message: msg.taken(item.name), item: item.name });
     }
 
     case 'drop': {
       const itemId = findItem(world, normalize(command.itemName), state.inventory);
-      if (!itemId) return fail('not_carrying', `You aren't carrying any "${command.itemName}".`);
+      if (!itemId) return fail('not_carrying', msg.notCarried(command.itemName));
       state.inventory = state.inventory.filter((id) => id !== itemId);
       state.roomItems[state.roomId] = [...roomItems(state), itemId];
-      return ok({ message: `Dropped: ${world.items[itemId]!.name}.` });
+      return ok({ message: msg.dropped(world.items[itemId]!.name) });
     }
 
     case 'use': {
       const direct = resolveThing(world, state, command.direct_object);
-      if (!direct) return fail('unknown_target', `You don't see any "${command.direct_object}" here.`);
+      if (!direct) return fail('unknown_target', msg.notHere(command.direct_object));
       const indirectQuery = command.indirect_object?.trim() || undefined;
       const indirect = indirectQuery ? resolveThing(world, state, indirectQuery) : undefined;
-      if (indirectQuery && !indirect) return fail('unknown_target', `You don't see any "${indirectQuery}" here.`);
+      if (indirectQuery && !indirect) return fail('unknown_target', msg.notHere(indirectQuery));
 
       const applicable = world.rules.filter((r) => !r.room || r.room === state.roomId);
       const rule = applicable.find(
@@ -158,9 +166,9 @@ function run(level: Level, state: GameState, command: Command): StepResult {
         return ok({ message: rule.message });
       }
       if (!indirect && applicable.some((r) => r.use === direct && r.on)) {
-        return ok({ message: 'Use it on what? Pass an indirect_object.' });
+        return ok({ message: msg.useOnWhat });
       }
-      return ok({ message: 'Nothing happens.' });
+      return ok({ message: msg.nothingHappens });
     }
   }
 }
@@ -219,7 +227,12 @@ function roomItems(state: GameState): string[] {
 }
 
 function normalize(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, ' ').replace(/^(the|a|an) /, '');
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/’/g, "'")
+    .replace(/^(?:(?:the|a|an|le|la|les|un|une|des|du|de la) |l')/, '');
 }
 
 function ok(body: unknown): StepResult {

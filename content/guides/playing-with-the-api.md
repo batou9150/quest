@@ -62,6 +62,8 @@ curl -s "$QUEST_URL/game/look" -H "Authorization: ApiKey $QUEST_KEY"
 }
 ```
 
+Add `?lang=fr` (or send `Accept-Language: fr`) to get the game texts in French: `/game/look?lang=fr`. Commands, exit names (`north`, `ring`...) and error codes stay in English, and item names can be typed in either language.
+
 ## 3. Act
 
 Actions are `POST` requests with a small JSON body:

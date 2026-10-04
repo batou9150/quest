@@ -1,5 +1,6 @@
 import type { Context, Env } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { DEFAULT_LANG, isLang, type Lang } from '@quest/shared';
 import { z } from 'zod';
 import type { Config } from './config.ts';
 import type { Db } from './db/db.ts';
@@ -51,6 +52,19 @@ export async function body<S extends z.ZodType>(c: Context, schema: S): Promise<
     });
   }
   return parsed.data;
+}
+
+/**
+ * Language of game texts for this request: `?lang=`, else the first supported language of
+ * the Accept-Language header, else English.
+ */
+export function gameLang(c: Context): Lang {
+  const query = c.req.query('lang');
+  if (isLang(query)) return query;
+  const accepted = (c.req.header('Accept-Language') ?? '')
+    .split(',')
+    .map((part) => part.split(';')[0]!.trim().slice(0, 2).toLowerCase());
+  return accepted.find(isLang) ?? DEFAULT_LANG;
 }
 
 /** Structured log line understood by Cloud Logging. */

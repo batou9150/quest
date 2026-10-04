@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type { Level } from '@quest/engine';
 import { demoLevels } from '@quest/levels-demo';
 import { loadConfig } from './config.ts';
 import { MemoryDb } from './db/memory.ts';
-import { paths, type GuideDoc } from './models.ts';
+import { paths, type GuideDoc, type LevelDoc } from './models.ts';
 import { loadGuides, seedContent, STARTER_AUTHOR } from './seed.ts';
 
 const { guidesDir } = loadConfig({});
@@ -34,6 +35,22 @@ describe('starter content', () => {
     const intro = await db.get<GuideDoc>(paths.guide('what-is-a-text-adventure'));
     const api = await db.get<GuideDoc>(paths.guide('playing-with-the-api'));
     expect(intro!.publishedAt > api!.publishedAt).toBe(true);
+  });
+
+  it('adds new translations to demo levels seeded before them, unless the level was edited to no longer fit', async () => {
+    const db = new MemoryDb();
+    const [ring, dust] = demoLevels as [Level, Level];
+    const stamp = '2026-01-01T00:00:00.000Z';
+    const { locales: _ring, ...oldRing } = ring;
+    await db.set(paths.level(ring.id), { ...oldRing, title: 'Renamed', published: false, updatedAt: stamp });
+    const { locales: _dust, ...oldDust } = dust;
+    await db.set(paths.level(dust.id), { ...oldDust, world: { ...dust.world, rules: [] }, published: true, updatedAt: stamp });
+    await seedContent(db, guidesDir, NOW);
+
+    const seededRing = await db.get<LevelDoc>(paths.level(ring.id));
+    expect(seededRing).toMatchObject({ title: 'Renamed', published: false, updatedAt: NOW.toISOString() });
+    expect(seededRing!.locales.fr?.title).toBe("L'Anneau sous la montagne");
+    expect(await db.get<LevelDoc>(paths.level(dust.id))).not.toHaveProperty('locales');
   });
 
   it('adds new translations to starter guides seeded before them, keeping their texts', async () => {

@@ -275,6 +275,7 @@
     "quickStart": "Quick start",
     "quickStartNote": "Start a level from <a>Level Select</a> first. The API always acts on your <strong>active level</strong> (the one you last started or resumed), the same one as the web terminal. Without one, game calls answer <code>409 no_active_level</code>.",
     "copyCommand": "Copy command",
+    "languageNote": "Game texts are in English. Add <code>?lang=fr</code> to a call (or send <code>Accept-Language: fr</code>) to get them in French. Commands, exit names and error codes stay in English; item names work in both languages.",
     "errorsNote": "Errors are JSON: <code>{ \"error\", \"message\" }</code> with status 400 (unknown target, locked exit…), 401 (bad key), 409 (no active level) or 429 (rate limited).",
     "endpoints": "Game endpoints",
     "endpoint": {

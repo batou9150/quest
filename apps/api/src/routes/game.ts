@@ -2,7 +2,7 @@ import type { Command } from '@quest/engine';
 import { Hono, type Context } from 'hono';
 import { z } from 'zod';
 import { requireUser } from '../auth/session.ts';
-import { body, HttpError, type AppEnv } from '../http.ts';
+import { body, gameLang, HttpError, type AppEnv } from '../http.ts';
 import { play } from '../services/game.ts';
 
 /** /game/*: the public game API (see openapi.json), on the caller's active level. */
@@ -47,7 +47,7 @@ game.post('/use', async (c) =>
 );
 
 async function run(c: Context<AppEnv>, command: Command) {
-  const result = await play(c.get('deps'), requireUser(c).id, command);
+  const result = await play(c.get('deps'), requireUser(c).id, command, gameLang(c));
   if (!result.ok) throw new HttpError(400, result.error, result.message);
   return c.json(result.body as object);
 }

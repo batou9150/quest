@@ -1,4 +1,5 @@
 import { newGame, step, type Command, type StepResult } from '@quest/engine';
+import type { Lang } from '@quest/shared';
 import { HttpError, log, type AuthedUser, type Deps } from '../http.ts';
 import { paths, type EventDoc, type EventScoreDoc, type ProgressDoc, type UserDoc } from '../models.ts';
 import { eventStatus } from './events.ts';
@@ -33,10 +34,10 @@ export async function startLevel(deps: Deps, user: AuthedUser, levelId: string, 
 }
 
 /**
- * Runs one game command on the user's active level, atomically.
+ * Runs one game command on the user's active level, atomically, answering in `lang`.
  * On completion it records the best score, the user's total, and scores of running events.
  */
-export async function play(deps: Deps, uid: string, command: Command): Promise<StepResult> {
+export async function play(deps: Deps, uid: string, command: Command, lang: Lang): Promise<StepResult> {
   const { db, now } = deps;
   // Only a move can complete a level. Read outside the transaction: events change rarely.
   const runningEvents =
@@ -55,7 +56,7 @@ export async function play(deps: Deps, uid: string, command: Command): Promise<S
       throw new HttpError(409, 'no_active_level', 'No active level. Start one from Level Select first.');
     }
 
-    const out = step(level, progress.state, command);
+    const out = step(level, progress.state, command, lang);
     const completed = out.state.finished && !progress.state.finished;
     const events = completed ? runningEvents.filter((e) => !e.data.levelIds.length || e.data.levelIds.includes(level.id)) : [];
     const eventScores = await Promise.all(events.map((e) => tx.get<EventScoreDoc>(paths.eventScore(e.id, uid))));

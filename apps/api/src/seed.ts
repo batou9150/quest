@@ -1,5 +1,6 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
+import { parseLevel } from '@quest/engine';
 import { demoLevels } from '@quest/levels-demo';
 import { DEFAULT_LANG, GuideInputSchema, GuideTextSchema, isLang, LANGS, SLUG_PATTERN, type GuideText, type Lang } from '@quest/shared';
 import type { Db } from './db/db.ts';
@@ -11,14 +12,30 @@ export const STARTER_AUTHOR = 'The Quantum Quest';
 
 /**
  * Adds the public starter content (demo levels, guides in content/guides/*.md) when it is missing,
- * and translations missing from starter guides.
+ * and translations missing from demo levels and starter guides.
  * Never overwrites admin edits. Deleted items come back on the next start; set SEED_DEMO=false to stop seeding.
  */
 export async function seedContent(db: Db, guidesDir: string, now: Date): Promise<void> {
   for (const level of demoLevels) {
-    if (await db.get(paths.level(level.id))) continue;
-    await db.set<LevelDoc>(paths.level(level.id), { ...level, published: true, updatedAt: now.toISOString() });
-    log('INFO', `Seeded level ${level.id}`);
+    const existing = await db.get<LevelDoc>(paths.level(level.id));
+    if (!existing) {
+      await db.set<LevelDoc>(paths.level(level.id), { ...level, published: true, updatedAt: now.toISOString() });
+      log('INFO', `Seeded level ${level.id}`);
+      continue;
+    }
+    // A demo level that exists may lack a translation added since: add it, unless the level was edited so that it no longer fits.
+    const current = existing.locales ?? {};
+    const missing = Object.keys(level.locales).filter((lang) => !current[lang]);
+    if (!missing.length) continue;
+    const locales = { ...current, ...Object.fromEntries(missing.map((lang) => [lang, level.locales[lang]])) };
+    try {
+      parseLevel({ ...existing, locales });
+    } catch {
+      log('WARNING', `Level ${level.id} was edited: its ${missing.join(', ')} translation was not added`);
+      continue;
+    }
+    await db.merge(paths.level(level.id), { locales, updatedAt: now.toISOString() });
+    log('INFO', `Seeded level ${level.id} translations: ${missing.join(', ')}`);
   }
   for (const { slug, order, guide } of loadGuides(guidesDir)) {
     const existing = await db.get<GuideDoc>(paths.guide(slug));
