@@ -12,11 +12,13 @@ import {
   ReactFlow,
   type Edge,
   type Node,
+  type NodeChange,
   type NodeProps,
   type ReactFlowInstance,
+  type XYPosition,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, ChevronLeft, Maximize2, Minimize2, Network, X } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, Maximize2, Minimize2, Network, RotateCcw, X } from 'lucide-react';
 import { levelGraph, type GraphEdge, type GraphEdgeKind, type GraphNode, type GraphNodeKind, type Level } from '@quest/engine';
 import { useApi } from '../../lib/hooks';
 import { PageHeader } from '../../components/PageHeader';
@@ -95,6 +97,8 @@ function layoutGraph(
         data: { graph: n, selected: n.id === selectedId },
         width,
         height,
+        // Sizes are fixed per kind: giving them up front lets React Flow drag nodes without measuring them.
+        measured: { width, height },
       };
     }),
     edges: edges.map((e) => {
@@ -220,10 +224,38 @@ function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>;
   );
 }
 
+// --- Moved nodes ---------------------------------------------------------------
+
+type Positions = Record<string, XYPosition>;
+const positionsKey = (levelId: string) => `quest.preview.positions.${levelId}`;
+
+/** Node positions moved by hand, kept per level in this browser only. */
+function loadPositions(levelId: string): Positions {
+  try {
+    return JSON.parse(localStorage.getItem(positionsKey(levelId)) ?? '{}') as Positions;
+  } catch {
+    return {};
+  }
+}
+
+function savePositions(levelId: string, positions: Positions): void {
+  try {
+    if (Object.keys(positions).length) localStorage.setItem(positionsKey(levelId), JSON.stringify(positions));
+    else localStorage.removeItem(positionsKey(levelId));
+  } catch {
+    // Storage unavailable (private mode...): moved nodes just won't survive a reload.
+  }
+}
+
 // --- Page --------------------------------------------------------------------
 
 export function AdminLevelPreview() {
   const { id = '' } = useParams<{ id: string }>();
+  // Keyed by level, so per-level state (moved nodes) starts fresh when the URL changes.
+  return <LevelPreview key={id} id={id} />;
+}
+
+function LevelPreview({ id }: { id: string }) {
   const { data: level, error, loading, reload } = useApi<Level>(`/api/admin/levels/${encodeURIComponent(id)}`);
   const [hidden, setHidden] = useState<Set<EdgeGroup>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -231,6 +263,12 @@ export function AdminLevelPreview() {
   const flowInstance = useRef<ReactFlowInstance<QuestNode> | null>(null);
   /** 'native': browser fullscreen; 'window': fills the window where the Fullscreen API is missing (iPhone). */
   const [fullscreen, setFullscreen] = useState<'off' | 'native' | 'window'>('off');
+  const [positions, setPositions] = useState<Positions>(() => loadPositions(id));
+  const dragging = useRef(false);
+
+  useEffect(() => {
+    if (!dragging.current) savePositions(id, positions);
+  }, [id, positions]);
 
   const graph = useMemo(() => (level ? levelGraph(level) : null), [level]);
 
@@ -247,6 +285,23 @@ export function AdminLevelPreview() {
     () => (visible ? layoutGraph(visible.nodes, visible.edges, selectedId) : null),
     [visible, selectedId],
   );
+
+  // The automatic layout, with the nodes moved by hand at their new place.
+  const nodes = useMemo(
+    () => flow?.nodes.map((n) => (positions[n.id] ? { ...n, position: positions[n.id]! } : n)) ?? [],
+    [flow, positions],
+  );
+
+  const onNodesChange = (changes: NodeChange<QuestNode>[]) => {
+    const moved: Positions = {};
+    for (const change of changes) {
+      if (change.type !== 'position') continue;
+      dragging.current = !!change.dragging;
+      if (change.position) moved[change.id] = change.position;
+    }
+    // A new object even without moves: the save effect runs once the drag ends.
+    setPositions((current) => ({ ...current, ...moved }));
+  };
 
   const selected = graph?.nodes.find((n) => n.id === selectedId) ?? null;
   const unreachable = graph?.nodes.filter((n) => n.kind === 'room' && !n.reachable) ?? [];
@@ -326,7 +381,7 @@ export function AdminLevelPreview() {
           <div className={`${card} space-y-3 p-4`}>
             <Legend hidden={hidden} onToggle={toggle} />
             <p className="text-xs text-slate-500">
-              Dashed exits (🔒) need a condition. Click a node to highlight its links and read its text.
+              Dashed exits (🔒) need a condition. Click a node to highlight its links and read its text; drag it to move it.
             </p>
           </div>
 
@@ -342,7 +397,7 @@ export function AdminLevelPreview() {
           >
             <ReactFlow
               key={[...hidden].join()}
-              nodes={flow.nodes}
+              nodes={nodes}
               edges={flow.edges}
               nodeTypes={nodeTypes}
               colorMode="dark"
@@ -353,7 +408,8 @@ export function AdminLevelPreview() {
                 flowInstance.current = instance;
               }}
               minZoom={0.1}
-              nodesDraggable={false}
+              nodesDraggable
+              onNodesChange={onNodesChange}
               nodesConnectable={false}
               elementsSelectable={false}
               onNodeClick={(_, node) => setSelectedId((current) => (current === node.id ? null : node.id))}
@@ -368,6 +424,11 @@ export function AdminLevelPreview() {
                 >
                   {fullscreen === 'off' ? <Maximize2 aria-hidden /> : <Minimize2 aria-hidden />}
                 </ControlButton>
+                {Object.keys(positions).length > 0 && (
+                  <ControlButton onClick={() => setPositions({})} aria-label="Reset layout" title="Reset layout (undo moved nodes)">
+                    <RotateCcw aria-hidden />
+                  </ControlButton>
+                )}
               </Controls>
               <MiniMap
                 pannable
