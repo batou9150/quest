@@ -37,6 +37,7 @@ No Firebase products: the browser never talks to Firestore, only to the API.
 | Leaderboards | Plain API calls, polled every 15 s by the page | No websockets, no browser access to Firestore |
 | Level content | Only the demo level is in this repo; real levels are uploaded through the admin API | The repo is public; level files are the answer key |
 | Admin | `/api/admin/*` + admin pages, for users with `role: "admin"` | Roles, bans, levels, events, guides |
+| Starter content | The demo level and `content/guides/*.md` are added at startup when missing | A fresh install is playable and documented; admins can edit them afterwards |
 
 ## Code layout
 
@@ -44,6 +45,7 @@ No Firebase products: the browser never talks to Firestore, only to the API.
 packages/engine        Pure game engine: level schema (zod) + step(level, state, command). No I/O.
 packages/levels-demo   The public tutorial level (level.json) and its playthrough tests.
 packages/shared        Types and zod schemas of the site API, shared by api and web.
+content/guides         Starter guides (markdown with front matter), seeded at startup.
 apps/api               Hono server: routes, auth, Firestore/memory storage, OpenAPI file.
 apps/web               React + Vite + Tailwind front end, including admin pages.
 ```

@@ -1,10 +1,9 @@
 import { serve } from '@hono/node-server';
-import { demoLevel } from '@quest/levels-demo';
 import { createApp } from './app.ts';
 import { loadConfig } from './config.ts';
 import type { Db } from './db/db.ts';
 import { log } from './http.ts';
-import { paths, type LevelDoc } from './models.ts';
+import { seedContent } from './seed.ts';
 import { LevelCache } from './services/levels.ts';
 
 const config = loadConfig();
@@ -15,10 +14,7 @@ async function createDb(): Promise<Db> {
 }
 
 const db = await createDb();
-if (config.seedDemo && !(await db.get(paths.level(demoLevel.id)))) {
-  await db.set<LevelDoc>(paths.level(demoLevel.id), { ...demoLevel, published: true, updatedAt: new Date().toISOString() });
-  log('INFO', `Seeded demo level ${demoLevel.id}`);
-}
+if (config.seedDemo) await seedContent(db, config.guidesDir, new Date());
 
 const app = createApp({ config, db, levels: new LevelCache(db), now: () => new Date() });
 const server = serve({ fetch: app.fetch, port: config.port }, ({ port }) => {

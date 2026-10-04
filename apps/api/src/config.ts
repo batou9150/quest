@@ -13,7 +13,7 @@ const EnvSchema = z.object({
   /** Public origin of the site, used for OAuth callbacks and CSRF checks. */
   PUBLIC_URL: z.url().default('http://localhost:5173'),
   STORE: z.enum(['firestore', 'memory']).default('firestore'),
-  /** Upserts the demo level at startup when it is missing (default: on with the memory store). */
+  /** Adds the demo level and starter guides at startup when missing (default: on with the memory store). */
   SEED_DEMO: z.enum(['true', 'false']).optional(),
   /** Emails that get the admin role at login. Used to bootstrap the first admin. */
   ADMIN_EMAILS: list,
@@ -25,6 +25,7 @@ const EnvSchema = z.object({
   /** Game API calls per user per minute. */
   GAME_RATE_LIMIT: z.coerce.number().int().positive().default(60),
   WEB_DIST: z.string().default(fileURLToPath(new URL('../../web/dist', import.meta.url))),
+  GUIDES_DIR: z.string().default(fileURLToPath(new URL('../../../content/guides', import.meta.url))),
 });
 
 export type Config = ReturnType<typeof loadConfig>;
@@ -45,5 +46,6 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     github: e.GITHUB_CLIENT_ID && e.GITHUB_CLIENT_SECRET ? { clientId: e.GITHUB_CLIENT_ID, clientSecret: e.GITHUB_CLIENT_SECRET } : null,
     gameRateLimit: e.GAME_RATE_LIMIT,
     webDist: e.WEB_DIST,
+    guidesDir: e.GUIDES_DIR,
   };
 }

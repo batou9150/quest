@@ -108,10 +108,10 @@ gcloud billing budgets create --billing-account=YOUR_BILLING_ACCOUNT \
 
 ## 7. First deploy and first admin
 
-Push to `main` (or run the Deploy workflow by hand). Log in on the site with an email listed in `ADMIN_EMAILS`: you get the admin role. Then, from the API Access page, generate an API key and upload levels:
+Push to `main` (or run the Deploy workflow by hand). The demo level and the starter guides from `content/guides/` are added at startup when missing (`SEED_DEMO=true`). Log in on the site with an email listed in `ADMIN_EMAILS`: you get the admin role. Then, from the API Access page, generate an API key and upload levels:
 
 ```bash
-QUEST_URL=$PUBLIC_URL QUEST_API_KEY=qk_... npm run levels:push -- packages/levels-demo/level.json ../quest-levels/*.json --publish
+QUEST_URL=$PUBLIC_URL QUEST_API_KEY=qk_... npm run levels:push -- ../quest-levels/*.json --publish
 ```
 
 ## Custom domain (optional)

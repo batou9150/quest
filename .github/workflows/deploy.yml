@@ -45,5 +45,5 @@ jobs:
             --max-instances 3 \
             --concurrency 80 \
             --memory 512Mi \
-            --set-env-vars "^;^PUBLIC_URL=${{ vars.PUBLIC_URL }};ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }};GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }};GITHUB_CLIENT_ID=${{ vars.GITHUB_CLIENT_ID }}" \
+            --set-env-vars "^;^SEED_DEMO=true;PUBLIC_URL=${{ vars.PUBLIC_URL }};ADMIN_EMAILS=${{ vars.ADMIN_EMAILS }};GOOGLE_CLIENT_ID=${{ vars.GOOGLE_CLIENT_ID }};GITHUB_CLIENT_ID=${{ vars.GITHUB_CLIENT_ID }}" \
             --set-secrets "GOOGLE_CLIENT_SECRET=google-client-secret:latest,GITHUB_CLIENT_SECRET=github-client-secret:latest"

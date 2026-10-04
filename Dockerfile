@@ -26,11 +26,12 @@ COPY --from=build /app/apps/web/package.json apps/web/
 RUN npm ci --omit=dev --workspace @quest/api --ignore-scripts
 
 FROM node:24-slim
-ENV NODE_ENV=production PORT=8080 WEB_DIST=/app/web
+ENV NODE_ENV=production PORT=8080 WEB_DIST=/app/web GUIDES_DIR=/app/content/guides
 WORKDIR /app
 COPY --from=deps /app/node_modules node_modules
 COPY --from=build /app/apps/api/dist api
 COPY --from=build /app/apps/web/dist web
+COPY content content
 USER node
 EXPOSE 8080
 CMD ["node", "--enable-source-maps", "api/server.js"]

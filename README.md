@@ -42,6 +42,7 @@ gcloud emulators firestore start --host-port=localhost:8681
 - [Architecture](docs/ARCHITECTURE.md): components, decisions, data model, security
 - [Deploying to Google Cloud](docs/DEPLOY.md): Cloud Run, Firestore, OAuth apps, GitHub Actions
 - [Writing levels](docs/LEVELS.md)
+- Starter guides: [`content/guides/`](content/guides) (markdown, added to the site at startup when missing)
 
 ## Licence
 
