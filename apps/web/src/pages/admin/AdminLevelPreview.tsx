@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { Graph, layout } from '@dagrejs/dagre';
 import {
   Background,
+  ControlButton,
   Controls,
   Handle,
   MarkerType,
@@ -12,9 +13,10 @@ import {
   type Edge,
   type Node,
   type NodeProps,
+  type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { AlertTriangle, ChevronLeft, Network, X } from 'lucide-react';
+import { AlertTriangle, ChevronLeft, Maximize2, Minimize2, Network, X } from 'lucide-react';
 import { levelGraph, type GraphEdge, type GraphEdgeKind, type GraphNode, type GraphNodeKind, type Level } from '@quest/engine';
 import { useApi } from '../../lib/hooks';
 import { PageHeader } from '../../components/PageHeader';
@@ -165,6 +167,59 @@ function QuestNodeView({ data }: NodeProps<QuestNode>) {
 
 const nodeTypes = { quest: QuestNodeView };
 
+// --- Legend ------------------------------------------------------------------
+
+/** Link-group toggles and the colour key. `compact` is the overlay shown in fullscreen. */
+function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>; onToggle: (group: EdgeGroup) => void; compact?: boolean }) {
+  return (
+    <>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show links">
+        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-slate-500">Show</span>
+        {GROUPS.map((g) => (
+          <button
+            key={g.id}
+            type="button"
+            disabled={!g.toggle}
+            aria-pressed={!hidden.has(g.id)}
+            onClick={() => onToggle(g.id)}
+            className={`${chip} ${hidden.has(g.id) ? chipIdle : chipActive} disabled:cursor-default`}
+          >
+            {g.name}
+          </button>
+        ))}
+      </div>
+      <ul className={`grid gap-x-6 gap-y-1.5 text-xs text-slate-400 ${compact ? 'grid-cols-1' : 'sm:grid-cols-2 lg:grid-cols-4'}`}>
+        {(Object.keys(NODE_STYLE) as GraphNodeKind[]).map((kind) => (
+          <li key={kind} className="flex items-center gap-2">
+            <span
+              className="inline-block h-3 w-5 border-2 bg-slate-950"
+              style={{ borderColor: NODE_STYLE[kind].color, borderRadius: kind === 'flag' ? 999 : 4 }}
+              aria-hidden
+            />
+            {NODE_STYLE[kind].name}
+          </li>
+        ))}
+        {(Object.keys(EDGE_STYLE) as GraphEdgeKind[]).map((kind) => (
+          <li key={kind} className={`flex items-center gap-2 ${hidden.has(EDGE_STYLE[kind].group) ? 'opacity-40' : ''}`}>
+            <svg width="20" height="8" aria-hidden>
+              <line
+                x1="0"
+                y1="4"
+                x2="20"
+                y2="4"
+                stroke={EDGE_STYLE[kind].color}
+                strokeWidth="2.5"
+                strokeDasharray={EDGE_STYLE[kind].dashed ? '4 3' : undefined}
+              />
+            </svg>
+            {EDGE_STYLE[kind].name}
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+}
+
 // --- Page --------------------------------------------------------------------
 
 export function AdminLevelPreview() {
@@ -172,6 +227,10 @@ export function AdminLevelPreview() {
   const { data: level, error, loading, reload } = useApi<Level>(`/api/admin/levels/${encodeURIComponent(id)}`);
   const [hidden, setHidden] = useState<Set<EdgeGroup>>(new Set());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const canvas = useRef<HTMLDivElement>(null);
+  const flowInstance = useRef<ReactFlowInstance<QuestNode> | null>(null);
+  /** 'native': browser fullscreen; 'window': fills the window where the Fullscreen API is missing (iPhone). */
+  const [fullscreen, setFullscreen] = useState<'off' | 'native' | 'window'>('off');
 
   const graph = useMemo(() => (level ? levelGraph(level) : null), [level]);
 
@@ -192,6 +251,41 @@ export function AdminLevelPreview() {
   const selected = graph?.nodes.find((n) => n.id === selectedId) ?? null;
   const unreachable = graph?.nodes.filter((n) => n.kind === 'room' && !n.reachable) ?? [];
   const count = (kind: GraphNodeKind) => graph?.nodes.filter((n) => n.kind === kind).length ?? 0;
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === canvas.current ? 'native' : 'off');
+    document.addEventListener('fullscreenchange', onChange);
+    return () => document.removeEventListener('fullscreenchange', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (fullscreen !== 'window') return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setFullscreen('off');
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [fullscreen]);
+
+  // The canvas changes size when entering or leaving fullscreen: fit the entrance side again once it is applied.
+  useEffect(() => {
+    const frame = requestAnimationFrame(() =>
+      flowInstance.current?.fitView({ nodes: flow?.entrance, maxZoom: 1, padding: 0.15 }),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [fullscreen]);
+
+  const toggleFullscreen = async () => {
+    if (fullscreen === 'native') return void (await document.exitFullscreen());
+    if (fullscreen === 'window') return setFullscreen('off');
+    if (canvas.current?.requestFullscreen) {
+      try {
+        await canvas.current.requestFullscreen();
+        return;
+      } catch {
+        // Refused (e.g. inside an iframe): fall back to filling the window.
+      }
+    }
+    setFullscreen('window');
+  };
 
   const toggle = (group: EdgeGroup) =>
     setHidden((current) => {
@@ -230,55 +324,22 @@ export function AdminLevelPreview() {
           )}
 
           <div className={`${card} space-y-3 p-4`}>
-            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show links">
-              <span className="mr-1 text-xs font-bold uppercase tracking-wider text-slate-500">Show</span>
-              {GROUPS.map((g) => (
-                <button
-                  key={g.id}
-                  type="button"
-                  disabled={!g.toggle}
-                  aria-pressed={!hidden.has(g.id)}
-                  onClick={() => toggle(g.id)}
-                  className={`${chip} ${hidden.has(g.id) ? chipIdle : chipActive} disabled:cursor-default`}
-                >
-                  {g.name}
-                </button>
-              ))}
-            </div>
-            <ul className="grid gap-x-6 gap-y-1.5 text-xs text-slate-400 sm:grid-cols-2 lg:grid-cols-4">
-              {(Object.keys(NODE_STYLE) as GraphNodeKind[]).map((kind) => (
-                <li key={kind} className="flex items-center gap-2">
-                  <span
-                    className="inline-block h-3 w-5 border-2 bg-slate-950"
-                    style={{ borderColor: NODE_STYLE[kind].color, borderRadius: kind === 'flag' ? 999 : 4 }}
-                    aria-hidden
-                  />
-                  {NODE_STYLE[kind].name}
-                </li>
-              ))}
-              {(Object.keys(EDGE_STYLE) as GraphEdgeKind[]).map((kind) => (
-                <li key={kind} className={`flex items-center gap-2 ${hidden.has(EDGE_STYLE[kind].group) ? 'opacity-40' : ''}`}>
-                  <svg width="20" height="8" aria-hidden>
-                    <line
-                      x1="0"
-                      y1="4"
-                      x2="20"
-                      y2="4"
-                      stroke={EDGE_STYLE[kind].color}
-                      strokeWidth="2.5"
-                      strokeDasharray={EDGE_STYLE[kind].dashed ? '4 3' : undefined}
-                    />
-                  </svg>
-                  {EDGE_STYLE[kind].name}
-                </li>
-              ))}
-            </ul>
+            <Legend hidden={hidden} onToggle={toggle} />
             <p className="text-xs text-slate-500">
               Dashed exits (🔒) need a condition. Click a node to highlight its links and read its text.
             </p>
           </div>
 
-          <div className="relative h-[70vh] min-h-[28rem] overflow-hidden rounded-xl border border-slate-800 bg-slate-950">
+          <div
+            ref={canvas}
+            className={`overflow-hidden bg-slate-950 ${
+              fullscreen === 'off'
+                ? 'relative h-[70vh] min-h-[28rem] rounded-xl border border-slate-800'
+                : fullscreen === 'window'
+                  ? 'fixed inset-0 z-50'
+                  : 'relative h-full w-full'
+            }`}
+          >
             <ReactFlow
               key={[...hidden].join()}
               nodes={flow.nodes}
@@ -288,6 +349,9 @@ export function AdminLevelPreview() {
               // The level reads left to right, entrance to exit: open readable on the entrance side, then pan.
               fitView
               fitViewOptions={{ nodes: flow.entrance, maxZoom: 1, padding: 0.15 }}
+              onInit={(instance) => {
+                flowInstance.current = instance;
+              }}
               minZoom={0.1}
               nodesDraggable={false}
               nodesConnectable={false}
@@ -296,7 +360,15 @@ export function AdminLevelPreview() {
               onPaneClick={() => setSelectedId(null)}
             >
               <Background color="#1e293b" bgColor="#020617" gap={24} />
-              <Controls showInteractive={false} position="bottom-left" />
+              <Controls showInteractive={false} position="bottom-left">
+                <ControlButton
+                  onClick={toggleFullscreen}
+                  aria-label={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen'}
+                  title={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen (Esc)'}
+                >
+                  {fullscreen === 'off' ? <Maximize2 aria-hidden /> : <Minimize2 aria-hidden />}
+                </ControlButton>
+              </Controls>
               <MiniMap
                 pannable
                 zoomable
@@ -307,6 +379,17 @@ export function AdminLevelPreview() {
                 ariaLabel="Level overview"
               />
             </ReactFlow>
+
+            {fullscreen !== 'off' && (
+              <details className="absolute left-3 top-3 max-h-[calc(100%-1.5rem)] w-64 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 p-3 shadow-xl">
+                <summary className="cursor-pointer text-sm font-bold text-white">
+                  {level?.title} <span className="font-normal text-slate-400">· legend</span>
+                </summary>
+                <div className="mt-3 space-y-3">
+                  <Legend hidden={hidden} onToggle={toggle} compact />
+                </div>
+              </details>
+            )}
 
             {selected && (
               <aside
