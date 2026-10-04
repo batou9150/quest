@@ -48,7 +48,15 @@ export function About() {
         <h2 className="text-2xl font-bold text-white">Creators &amp; contact</h2>
         <p className="text-slate-400">
           The Quantum Quest is an open-source project created by Baptiste Pirault and released under the MIT licence. Found a bug in the
-          simulation or have an idea for a level? Open an issue on the project repository.
+          simulation or have an idea for a level?{' '}
+          <a href="https://github.com/batou9150/quest/issues" className="text-quantum-400 hover:underline">
+            Open an issue
+          </a>{' '}
+          on the{' '}
+          <a href="https://github.com/batou9150/quest" className="text-quantum-400 hover:underline">
+            GitHub repository
+          </a>
+          .
         </p>
       </div>
     </div>
