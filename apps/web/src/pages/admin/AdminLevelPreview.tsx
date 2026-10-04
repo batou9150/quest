@@ -288,6 +288,8 @@ function QuestNodeView({ data }: NodeProps<QuestNode>) {
 }
 
 const HANDLE = '!h-1 !w-1 !min-h-0 !min-w-0 !border-0 !bg-transparent';
+/** React Flow's control buttons fill icons with colour; lucide icons are outlines, so keep them unfilled. */
+const OUTLINE = { fill: 'none' };
 
 const nodeTypes = { quest: QuestNodeView };
 
@@ -543,11 +545,11 @@ function LevelPreview({ id }: { id: string }) {
                   aria-label={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen'}
                   title={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen (Esc)'}
                 >
-                  {fullscreen === 'off' ? <Maximize2 aria-hidden /> : <Minimize2 aria-hidden />}
+                  {fullscreen === 'off' ? <Maximize2 aria-hidden style={OUTLINE} /> : <Minimize2 aria-hidden style={OUTLINE} />}
                 </ControlButton>
                 {Object.keys(positions).length > 0 && (
                   <ControlButton onClick={() => setPositions({})} aria-label="Reset layout" title="Reset layout (undo moved nodes)">
-                    <RotateCcw aria-hidden />
+                    <RotateCcw aria-hidden style={OUTLINE} />
                   </ControlButton>
                 )}
               </Controls>
