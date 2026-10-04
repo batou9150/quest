@@ -16,7 +16,8 @@
     "outDir": "../../node_modules/.tsbuild/web"
   },
   "include": [
-    "src"
+    "src",
+    "src/**/*.json"
   ],
   "references": [
     {

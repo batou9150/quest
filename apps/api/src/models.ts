@@ -66,6 +66,7 @@ export interface EventScoreDoc {
   updatedAt: string;
 }
 
+/** Texts per language (`locales.en` always exists); the image and publication are shared. */
 export type GuideDoc = GuideInput & { author: string; publishedAt: string; updatedAt: string };
 
 export const paths = {

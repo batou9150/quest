@@ -1,19 +1,52 @@
-const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-const dateOnly = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
-const number = new Intl.NumberFormat();
+import { currentLang } from '../i18n';
+
+interface Formatters {
+  dateTime: Intl.DateTimeFormat;
+  dateOnly: Intl.DateTimeFormat;
+  time: Intl.DateTimeFormat;
+  number: Intl.NumberFormat;
+}
+
+const cache = new Map<string, Formatters>();
+
+/** The site language, refined by the browser's region when it matches (en-GB, fr-CA...). */
+function locale(): string {
+  const lang = currentLang();
+  const regional = typeof navigator === 'undefined' ? undefined : navigator.languages?.find((l) => l.toLowerCase().startsWith(`${lang}-`));
+  return regional ?? lang;
+}
+
+function formatters(): Formatters {
+  const loc = locale();
+  let f = cache.get(loc);
+  if (!f) {
+    f = {
+      dateTime: new Intl.DateTimeFormat(loc, { dateStyle: 'medium', timeStyle: 'short' }),
+      dateOnly: new Intl.DateTimeFormat(loc, { dateStyle: 'medium' }),
+      time: new Intl.DateTimeFormat(loc, { timeStyle: 'medium' }),
+      number: new Intl.NumberFormat(loc),
+    };
+    cache.set(loc, f);
+  }
+  return f;
+}
 
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : dateTime.format(d);
+  return Number.isNaN(d.getTime()) ? iso : formatters().dateTime.format(d);
 }
 
 export function formatDate(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? iso : dateOnly.format(d);
+  return Number.isNaN(d.getTime()) ? iso : formatters().dateOnly.format(d);
+}
+
+export function formatTime(date: Date): string {
+  return formatters().time.format(date);
 }
 
 export function formatNumber(n: number): string {
-  return number.format(n);
+  return formatters().number.format(n);
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');

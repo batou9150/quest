@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router';
 import { Menu, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMe } from '../lib/auth';
 import { LogoMark } from './Logo';
 import { Sidebar } from './Sidebar';
+import { LanguageSwitcher } from './LanguageSwitcher';
 
 export function Layout() {
+  const { t } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { error } = useMe();
   const { pathname } = useLocation();
@@ -18,31 +21,34 @@ export function Layout() {
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-200">
       <a href="#content" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-slate-800 focus:px-3 focus:py-2">
-        Skip to content
+        {t('layout.skipToContent')}
       </a>
 
       <header className="sticky top-0 z-40 border-b border-slate-800 bg-slate-900/90 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-3" aria-label={t('layout.home')}>
             <LogoMark />
-            <span className="text-lg font-bold tracking-wider text-white">THE QUANTUM QUEST</span>
+            <span className="truncate text-lg font-bold tracking-wider text-white">THE QUANTUM QUEST</span>
           </Link>
-          <button
-            type="button"
-            className="rounded-md p-2 text-slate-300 hover:bg-slate-800 md:hidden"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={menuOpen}
-            aria-controls="sidebar"
-            onClick={() => setMenuOpen((o) => !o)}
-          >
-            {menuOpen ? <X aria-hidden /> : <Menu aria-hidden />}
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <LanguageSwitcher />
+            <button
+              type="button"
+              className="rounded-md p-2 text-slate-300 hover:bg-slate-800 md:hidden"
+              aria-label={menuOpen ? t('layout.closeMenu') : t('layout.openMenu')}
+              aria-expanded={menuOpen}
+              aria-controls="sidebar"
+              onClick={() => setMenuOpen((o) => !o)}
+            >
+              {menuOpen ? <X aria-hidden /> : <Menu aria-hidden />}
+            </button>
+          </div>
         </div>
       </header>
 
       {error && (
         <div role="alert" className="border-b border-amber-900/60 bg-amber-950/40 px-4 py-2 text-center text-sm text-amber-200">
-          Could not check your session: {error.message}
+          {t('layout.sessionError', { message: error.message })}
         </div>
       )}
 

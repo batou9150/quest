@@ -1,15 +1,17 @@
 import { useState, type ChangeEvent } from 'react';
 import { Eye, EyeOff, FileJson, Layers, Network, Pencil, Trash2, Upload, X } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 import type { AdminLevel, AdminLevelPatch } from '@quest/shared';
 import { api, ApiError, errorMessage } from '../../lib/api';
 import { useApi } from '../../lib/hooks';
-import { formatDateTime } from '../../lib/format';
+import { formatDateTime, formatNumber } from '../../lib/format';
 import { PageHeader } from '../../components/PageHeader';
 import { ActionMenu } from '../../components/ActionMenu';
 import { Empty, ErrorMessage, InlineError, Loading } from '../../components/Status';
 import { btnDanger, btnGhost, btnPrimary, btnSecondary, btnSmall, card, input, label } from '../../components/ui';
 
 function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUploaded: () => void; onClose: () => void }) {
+  const { t } = useTranslation();
   const [text, setText] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,16 +33,16 @@ function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUplo
     try {
       json = JSON.parse(text);
     } catch (err) {
-      setError(`Invalid JSON: ${errorMessage(err)}`);
+      setError(t('adminLevels.invalidJson', { message: errorMessage(err) }));
       return;
     }
     if (typeof json !== 'object' || json === null || Array.isArray(json)) {
-      setError('The level must be a JSON object.');
+      setError(t('adminLevels.notObject'));
       return;
     }
     const id = (json as Record<string, unknown>).id;
     if (typeof id !== 'string' || !id) {
-      setError('The level JSON needs a string "id" field.');
+      setError(t('adminLevels.noId'));
       return;
     }
     // GET /api/admin/levels/:id adds `published`, which is not part of the level schema.
@@ -48,7 +50,7 @@ function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUplo
     setBusy(true);
     try {
       await api<unknown>(`/api/admin/levels/${encodeURIComponent(id)}`, { method: 'PUT', body: level });
-      setSuccess(`Level "${id}" saved.`);
+      setSuccess(t('adminLevels.saved', { id }));
       onUploaded();
     } catch (err) {
       setError(errorMessage(err));
@@ -62,25 +64,24 @@ function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUplo
     <section className={`${card} space-y-4 p-5`} aria-labelledby="upload-title">
       <div className="flex items-center justify-between">
         <h2 id="upload-title" className="font-bold text-white">
-          Upload level
+          {t('adminLevels.upload')}
         </h2>
-        <button type="button" className={btnGhost} onClick={onClose} aria-label="Close upload panel">
+        <button type="button" className={btnGhost} onClick={onClose} aria-label={t('adminLevels.closeUpload')}>
           <X size={16} aria-hidden />
         </button>
       </div>
       <p className="text-sm text-slate-400">
-        Paste a level JSON or pick a file. It is saved under the JSON's <code className="font-mono text-slate-300">id</code> (created or
-        replaced).
+        <Trans i18nKey="adminLevels.uploadHelp" components={{ code: <code className="font-mono text-slate-300" /> }} />
       </p>
       <div>
         <label htmlFor="level-file" className={label}>
-          JSON file
+          {t('adminLevels.jsonFile')}
         </label>
         <input id="level-file" type="file" accept=".json,application/json" onChange={onFile} className="block text-sm text-slate-400 file:mr-3 file:rounded file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-slate-200" />
       </div>
       <div>
         <label htmlFor="level-json" className={label}>
-          Level JSON
+          {t('adminLevels.levelJson')}
         </label>
         <textarea id="level-json" className={`${input} h-80 font-mono text-xs`} value={text} onChange={(e) => setText(e.target.value)} spellCheck={false} />
       </div>
@@ -98,32 +99,33 @@ function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUplo
       )}
       {success && <p className="text-sm text-emerald-400" role="status">{success}</p>}
       <button type="button" className={btnPrimary} onClick={upload} disabled={busy || !text.trim()}>
-        <Upload size={16} aria-hidden /> {busy ? 'Uploading…' : 'Upload'}
+        <Upload size={16} aria-hidden /> {busy ? t('adminLevels.uploading') : t('adminLevels.uploadButton')}
       </button>
     </section>
   );
 }
 
 function LevelJson({ id, onEdit, onClose }: { id: string; onEdit: (json: string) => void; onClose: () => void }) {
+  const { t } = useTranslation();
   const { data, error, loading, reload } = useApi<unknown>(`/api/admin/levels/${encodeURIComponent(id)}`);
   const json = data === undefined ? '' : JSON.stringify(data, null, 2);
   return (
-    <section className={`${card} space-y-3 p-5`} aria-label={`JSON of level ${id}`}>
+    <section className={`${card} space-y-3 p-5`} aria-label={t('adminLevels.jsonOf', { id })}>
       <div className="flex items-center justify-between gap-2">
         <h2 className="font-mono font-bold text-white">{id}.json</h2>
         <div className="flex gap-2">
           {json && (
             <button type="button" className={`${btnSecondary} ${btnSmall}`} onClick={() => onEdit(json)}>
-              <Pencil size={14} aria-hidden /> Edit in uploader
+              <Pencil size={14} aria-hidden /> {t('adminLevels.editInUploader')}
             </button>
           )}
-          <button type="button" className={btnGhost} onClick={onClose} aria-label="Close JSON view">
+          <button type="button" className={btnGhost} onClick={onClose} aria-label={t('adminLevels.closeJson')}>
             <X size={16} aria-hidden />
           </button>
         </div>
       </div>
       {loading && data === undefined ? (
-        <Loading label="Loading level…" />
+        <Loading label={t('adminLevels.loadingLevel')} />
       ) : error ? (
         <ErrorMessage error={error} onRetry={reload} />
       ) : (
@@ -134,6 +136,7 @@ function LevelJson({ id, onEdit, onClose }: { id: string; onEdit: (json: string)
 }
 
 function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: () => void; onView: () => void }) {
+  const { t } = useTranslation();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -172,17 +175,17 @@ function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: 
       <td className="px-4 py-3">
         <p className="font-bold text-slate-200">{level.title}</p>
         <p className="font-mono text-xs text-slate-500">{level.id}</p>
-        <p className="text-xs text-slate-600">updated {formatDateTime(level.updatedAt)}</p>
+        <p className="text-xs text-slate-600">{t('adminLevels.updated', { date: formatDateTime(level.updatedAt) })}</p>
       </td>
       <td className="px-4 py-3 font-mono text-xs text-slate-400">
-        {level.points} pts · par {level.par}
+        {t('adminLevels.scoring', { points: formatNumber(level.points), par: level.par })}
       </td>
       <td className="px-4 py-3">
         <button
           type="button"
           role="switch"
           aria-checked={level.published}
-          aria-label={`Published: ${level.title}`}
+          aria-label={t('adminLevels.publishedLabel', { title: level.title })}
           disabled={busy}
           onClick={togglePublished}
           className={`${btnSmall} inline-flex items-center gap-1 rounded-full border font-bold ${
@@ -190,27 +193,27 @@ function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: 
           }`}
         >
           {level.published ? <Eye size={12} aria-hidden /> : <EyeOff size={12} aria-hidden />}
-          {level.published ? 'Published' : 'Draft'}
+          {level.published ? t('adminLevels.published') : t('adminLevels.draft')}
         </button>
       </td>
       <td className="px-4 py-3 text-right">
         {confirmingDelete ? (
-          <span className="inline-flex flex-wrap items-center justify-end gap-2" role="group" aria-label={`Delete level ${level.title}?`}>
-            <span className="text-xs text-amber-300">Delete this level?</span>
+          <span className="inline-flex flex-wrap items-center justify-end gap-2" role="group" aria-label={t('adminLevels.deleteGroup', { title: level.title })}>
+            <span className="text-xs text-amber-300">{t('adminLevels.deletePrompt')}</span>
             <button type="button" className={`${btnDanger} ${btnSmall}`} disabled={busy} onClick={deleteLevel}>
-              {busy ? 'Deleting…' : 'Delete'}
+              {busy ? t('adminLevels.deleting') : t('common.delete')}
             </button>
             <button type="button" className={`${btnGhost} ${btnSmall}`} disabled={busy} onClick={() => setConfirmingDelete(false)}>
-              Cancel
+              {t('common.cancel')}
             </button>
           </span>
         ) : (
           <ActionMenu
-            label={`Actions for ${level.title}`}
+            label={t('adminLevels.actionsFor', { title: level.title })}
             items={[
-              { label: 'Preview', icon: <Network size={15} aria-hidden />, to: `/admin/levels/${encodeURIComponent(level.id)}/preview` },
-              { label: 'View JSON', icon: <FileJson size={15} aria-hidden />, onSelect: onView },
-              { label: 'Delete…', icon: <Trash2 size={15} aria-hidden />, danger: true, onSelect: () => setConfirmingDelete(true) },
+              { label: t('adminLevels.preview'), icon: <Network size={15} aria-hidden />, to: `/admin/levels/${encodeURIComponent(level.id)}/preview` },
+              { label: t('adminLevels.viewJson'), icon: <FileJson size={15} aria-hidden />, onSelect: onView },
+              { label: t('adminLevels.deleteMenu'), icon: <Trash2 size={15} aria-hidden />, danger: true, onSelect: () => setConfirmingDelete(true) },
             ]}
           />
         )}
@@ -221,6 +224,7 @@ function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: 
 }
 
 export function AdminLevels() {
+  const { t } = useTranslation();
   const { data, error, loading, reload } = useApi<AdminLevel[]>('/api/admin/levels');
   const [uploader, setUploader] = useState<{ initial: string; key: number } | null>(null);
   const [viewing, setViewing] = useState<string | null>(null);
@@ -235,12 +239,12 @@ export function AdminLevels() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Levels"
-        subtitle="Upload, publish and remove levels."
+        title={t('adminLevels.title')}
+        subtitle={t('adminLevels.subtitle')}
         icon={<Layers className="text-quantum-400" aria-hidden />}
         actions={
           <button type="button" className={btnPrimary} onClick={() => openUploader()}>
-            <Upload size={16} aria-hidden /> Upload level
+            <Upload size={16} aria-hidden /> {t('adminLevels.upload')}
           </button>
         }
       />
@@ -249,22 +253,22 @@ export function AdminLevels() {
       {viewing && <LevelJson key={viewing} id={viewing} onEdit={(json) => openUploader(json)} onClose={() => setViewing(null)} />}
 
       {loading && !data ? (
-        <Loading label="Loading levels…" />
+        <Loading label={t('adminLevels.loading')} />
       ) : error ? (
-        <ErrorMessage error={error} onRetry={reload} title="Could not load levels" />
+        <ErrorMessage error={error} onRetry={reload} title={t('adminLevels.loadError')} />
       ) : levels.length === 0 ? (
-        <Empty>No levels yet. Upload one to get started.</Empty>
+        <Empty>{t('adminLevels.empty')}</Empty>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
           <table className="w-full min-w-[36rem] text-left text-sm">
             <thead className="bg-slate-950 font-mono text-xs uppercase text-slate-400">
               <tr>
                 <th scope="col" className="px-4 py-3">#</th>
-                <th scope="col" className="px-4 py-3">Level</th>
-                <th scope="col" className="px-4 py-3">Scoring</th>
-                <th scope="col" className="px-4 py-3">Status</th>
+                <th scope="col" className="px-4 py-3">{t('adminLevels.colLevel')}</th>
+                <th scope="col" className="px-4 py-3">{t('adminLevels.colScoring')}</th>
+                <th scope="col" className="px-4 py-3">{t('adminLevels.colStatus')}</th>
                 <th scope="col" className="px-4 py-3 text-right">
-                  <span className="sr-only">Actions</span>
+                  <span className="sr-only">{t('adminLevels.colActions')}</span>
                 </th>
               </tr>
             </thead>

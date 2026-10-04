@@ -42,6 +42,8 @@ export const DIRECTION_SHORTCUTS: Record<string, string> = {
   d: 'down',
 };
 
+export type UsageVerb = 'examine' | 'move' | 'take' | 'drop' | 'use';
+
 export type ParsedCommand =
   | { kind: 'look' }
   | { kind: 'inventory' }
@@ -52,7 +54,8 @@ export type ParsedCommand =
   | { kind: 'use'; direct: string; indirect?: string }
   | { kind: 'help' }
   | { kind: 'clear' }
-  | { kind: 'usage'; message: string }
+  /** A verb was typed without its argument: the terminal shows how to use it. */
+  | { kind: 'usage'; verb: UsageVerb }
   | { kind: 'unknown'; verb: string };
 
 /** Parses a terminal line. `exits` are the current room's exits, so bare exit names work as moves. */
@@ -77,22 +80,22 @@ export function parseCommand(line: string, exits: readonly string[]): ParsedComm
       return { kind: 'inventory' };
     case 'examine':
     case 'x':
-      return arg ? { kind: 'examine', target: arg } : { kind: 'usage', message: 'Examine what? Usage: examine <thing>' };
+      return arg ? { kind: 'examine', target: arg } : { kind: 'usage', verb: 'examine' };
     case 'move':
     case 'go':
     case 'walk': {
-      if (!arg) return { kind: 'usage', message: 'Go where? Usage: move <exit>' };
+      if (!arg) return { kind: 'usage', verb: 'move' };
       const expanded = DIRECTION_SHORTCUTS[arg.toLowerCase()] ?? arg;
       return { kind: 'move', exit: expanded };
     }
     case 'take':
     case 'get':
     case 'grab':
-      return arg ? { kind: 'take', item: arg } : { kind: 'usage', message: 'Take what? Usage: take <item>' };
+      return arg ? { kind: 'take', item: arg } : { kind: 'usage', verb: 'take' };
     case 'drop':
-      return arg ? { kind: 'drop', item: arg } : { kind: 'usage', message: 'Drop what? Usage: drop <item>' };
+      return arg ? { kind: 'drop', item: arg } : { kind: 'usage', verb: 'drop' };
     case 'use': {
-      if (!arg) return { kind: 'usage', message: 'Use what? Usage: use <thing> [on|with <other>]' };
+      if (!arg) return { kind: 'usage', verb: 'use' };
       const m = /^(.+?)\s+(?:on|with)\s+(.+)$/i.exec(arg);
       if (m?.[1] && m[2]) return { kind: 'use', direct: m[1], indirect: m[2] };
       return { kind: 'use', direct: arg };

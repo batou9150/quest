@@ -16,6 +16,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useMe } from '../lib/auth';
 import { formatNumber } from '../lib/format';
 
@@ -59,25 +60,26 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function Sidebar({ onNavigate }: { onNavigate: () => void }) {
   const { me, loading, logout } = useMe();
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   return (
-    <nav aria-label="Main" className="flex flex-col gap-8">
-      <Section title="> NAV">
-        <NavItem to="/" end icon={Home} label="Home" onNavigate={onNavigate} />
-        <NavItem to="/events" icon={CalendarDays} label="Events" onNavigate={onNavigate} />
-        <NavItem to="/guides" icon={BookOpen} label="Guides" onNavigate={onNavigate} />
-        <NavItem to="/about" icon={Info} label="About" onNavigate={onNavigate} />
+    <nav aria-label={t('nav.main')} className="flex flex-col gap-8">
+      <Section title={t('nav.sectionNav')}>
+        <NavItem to="/" end icon={Home} label={t('nav.home')} onNavigate={onNavigate} />
+        <NavItem to="/events" icon={CalendarDays} label={t('nav.events')} onNavigate={onNavigate} />
+        <NavItem to="/guides" icon={BookOpen} label={t('nav.guides')} onNavigate={onNavigate} />
+        <NavItem to="/about" icon={Info} label={t('nav.about')} onNavigate={onNavigate} />
       </Section>
 
-      <Section title="> USER_CONSOLE">
+      <Section title={t('nav.sectionUser')}>
         {loading ? (
-          <p className="px-4 font-mono text-xs text-slate-600">checking session…</p>
+          <p className="px-4 font-mono text-xs text-slate-600">{t('nav.checkingSession')}</p>
         ) : me ? (
           <>
-            <NavItem to="/profile" icon={User} label="Profile" onNavigate={onNavigate} />
-            <NavItem to="/level-select" icon={Grid3x3} label="Level Select" onNavigate={onNavigate} />
-            {me.activeLevelId && <NavItem to="/play" icon={Terminal} label="Play" onNavigate={onNavigate} />}
-            <NavItem to="/game-api" icon={FileCode2} label="API Access" onNavigate={onNavigate} />
+            <NavItem to="/profile" icon={User} label={t('nav.profile')} onNavigate={onNavigate} />
+            <NavItem to="/level-select" icon={Grid3x3} label={t('nav.levelSelect')} onNavigate={onNavigate} />
+            {me.activeLevelId && <NavItem to="/play" icon={Terminal} label={t('nav.play')} onNavigate={onNavigate} />}
+            <NavItem to="/game-api" icon={FileCode2} label={t('nav.apiAccess')} onNavigate={onNavigate} />
             <button
               type="button"
               onClick={async () => {
@@ -88,20 +90,20 @@ export function Sidebar({ onNavigate }: { onNavigate: () => void }) {
               className="flex w-full items-center gap-3 rounded-lg border-l-2 border-transparent px-4 py-2.5 text-slate-400 transition-colors hover:bg-red-950/40 hover:text-red-400"
             >
               <LogOut size={18} aria-hidden />
-              <span className="font-medium tracking-wide">Disconnect</span>
+              <span className="font-medium tracking-wide">{t('nav.disconnect')}</span>
             </button>
           </>
         ) : (
-          <NavItem to="/login" icon={LogIn} label="Connect" onNavigate={onNavigate} />
+          <NavItem to="/login" icon={LogIn} label={t('nav.connect')} onNavigate={onNavigate} />
         )}
       </Section>
 
       {me?.role === 'admin' && (
-        <Section title="> ADMIN">
-          <NavItem to="/admin/users" icon={Users} label="Users" onNavigate={onNavigate} />
-          <NavItem to="/admin/levels" icon={Layers} label="Levels" onNavigate={onNavigate} />
-          <NavItem to="/admin/events" icon={Trophy} label="Events" onNavigate={onNavigate} />
-          <NavItem to="/admin/guides" icon={BookOpen} label="Guides" onNavigate={onNavigate} />
+        <Section title={t('nav.sectionAdmin')}>
+          <NavItem to="/admin/users" icon={Users} label={t('nav.users')} onNavigate={onNavigate} />
+          <NavItem to="/admin/levels" icon={Layers} label={t('nav.levels')} onNavigate={onNavigate} />
+          <NavItem to="/admin/events" icon={Trophy} label={t('nav.events')} onNavigate={onNavigate} />
+          <NavItem to="/admin/guides" icon={BookOpen} label={t('nav.guides')} onNavigate={onNavigate} />
         </Section>
       )}
 
@@ -116,7 +118,7 @@ export function Sidebar({ onNavigate }: { onNavigate: () => void }) {
           )}
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-white">{me.displayName}</p>
-            <p className="truncate font-mono text-xs text-quantum-400">{formatNumber(me.totalScore)} pts</p>
+            <p className="truncate font-mono text-xs text-quantum-400">{t('common.points', { points: formatNumber(me.totalScore) })}</p>
           </div>
         </div>
       )}

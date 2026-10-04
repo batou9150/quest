@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { EventStatus } from '@quest/shared';
 
 const styles: Record<EventStatus, string> = {
@@ -7,5 +8,6 @@ const styles: Record<EventStatus, string> = {
 };
 
 export function EventStatusBadge({ status }: { status: EventStatus }) {
-  return <span className={`rounded border px-2 py-1 font-mono text-xs font-bold ${styles[status]}`}>{status}</span>;
+  const { t } = useTranslation();
+  return <span className={`rounded border px-2 py-1 font-mono text-xs font-bold ${styles[status]}`}>{t(`eventStatus.${status}`)}</span>;
 }

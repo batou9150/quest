@@ -108,11 +108,25 @@ export interface LeaderboardEntry {
   score: number;
 }
 
+// --- Languages ---------------------------------------------------------------
+
+/** Languages of the website and of guides. Game texts (levels) and API messages stay in English. */
+export const LANGS = ['en', 'fr'] as const;
+export type Lang = (typeof LANGS)[number];
+export const DEFAULT_LANG: Lang = 'en';
+export const isLang = (value: unknown): value is Lang => (LANGS as readonly unknown[]).includes(value);
+
 // --- Guides -----------------------------------------------------------------
 
-/** GET /api/guides (list has content omitted), GET /api/guides/:slug */
+/**
+ * GET /api/guides?lang=fr (list: content omitted), GET /api/guides/:slug?lang=fr
+ * Texts are in `lang`: the requested language when the guide has it, else English.
+ */
 export interface Guide {
   slug: string;
+  lang: Lang;
+  /** Languages this guide is written in. */
+  languages: Lang[];
   title: string;
   category: string;
   author: string;
@@ -181,15 +195,34 @@ export const EventInputSchema = z
   .refine((e) => Date.parse(e.startTime) < Date.parse(e.endTime), { message: 'endTime must be after startTime', path: ['endTime'] });
 export type EventInput = z.infer<typeof EventInputSchema>;
 
-/** PUT /api/admin/guides/:slug (create or replace); DELETE /api/admin/guides/:slug → 204 */
-export const GuideInputSchema = z.object({
+/** The texts of a guide in one language. */
+export const GuideTextSchema = z.object({
   title: z.string().trim().min(1).max(120),
   category: z.string().trim().min(1).max(40),
   summary: z.string().trim().max(300).default(''),
-  imageUrl: z.url().nullable().default(null),
   content: z.string().max(100_000),
+});
+export type GuideText = z.infer<typeof GuideTextSchema>;
+
+/**
+ * PUT /api/admin/guides/:slug (create or replace); DELETE /api/admin/guides/:slug → 204
+ * English is required; other languages are optional, and readers fall back to English.
+ */
+export const GuideInputSchema = z.object({
+  imageUrl: z.url().nullable().default(null),
   published: z.boolean().default(false),
+  locales: z.object({ en: GuideTextSchema, fr: GuideTextSchema.optional() }),
 });
 export type GuideInput = z.infer<typeof GuideInputSchema>;
+
+/** GET /api/admin/guides → Guide[] (English texts, drafts included); GET /api/admin/guides/:slug → AdminGuide */
+export interface AdminGuide {
+  slug: string;
+  imageUrl: string | null;
+  published: boolean;
+  publishedAt: string;
+  author: string;
+  locales: Partial<Record<Lang, GuideText>> & { en: GuideText };
+}
 
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;

@@ -1,14 +1,17 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Check, Save, Sparkles, User as UserIcon } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { UpdateProfileSchema, type Me, type NameSuggestions } from '@quest/shared';
 import { api, errorMessage } from '../lib/api';
 import { useMe } from '../lib/auth';
 import { formatDate, formatNumber } from '../lib/format';
+import { formatIssues } from '../lib/issues';
 import { PageHeader } from '../components/PageHeader';
 import { InlineError } from '../components/Status';
 import { btnPrimary, btnSecondary, chip, chipIdle, input, label } from '../components/ui';
 
 function NameSuggester({ onPick }: { onPick: (name: string) => void }) {
+  const { t } = useTranslation();
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,11 +32,11 @@ function NameSuggester({ onPick }: { onPick: (name: string) => void }) {
   return (
     <div className="space-y-3">
       <button type="button" className={btnSecondary} onClick={load} disabled={busy}>
-        <Sparkles size={16} aria-hidden /> {busy ? 'Generating…' : suggestions.length ? 'More suggestions' : 'Suggest names'}
+        <Sparkles size={16} aria-hidden /> {busy ? t('common.generating') : suggestions.length ? t('profile.moreSuggestions') : t('profile.suggest')}
       </button>
       {error && <InlineError>{error}</InlineError>}
       {suggestions.length > 0 && (
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Name suggestions">
+        <div className="flex flex-wrap gap-2" role="group" aria-label={t('profile.suggestions')}>
           {suggestions.map((s) => (
             <button key={s} type="button" className={`${chip} ${chipIdle}`} onClick={() => onPick(s)}>
               {s}
@@ -46,6 +49,7 @@ function NameSuggester({ onPick }: { onPick: (name: string) => void }) {
 }
 
 function ProfileForm({ me }: { me: Me }) {
+  const { t } = useTranslation();
   const { refresh } = useMe();
   const [displayName, setDisplayName] = useState(me.displayName);
   const [bio, setBio] = useState(me.bio);
@@ -65,7 +69,7 @@ function ProfileForm({ me }: { me: Me }) {
     e.preventDefault();
     const parsed = UpdateProfileSchema.safeParse({ displayName, bio });
     if (!parsed.success) {
-      setError(parsed.error.issues.map((i) => `${i.path.join('.') || 'value'}: ${i.message}`).join(' · '));
+      setError(formatIssues(parsed.error.issues, ([field]) => (field === 'displayName' ? t('profile.displayName') : field === 'bio' ? t('profile.bio') : undefined)));
       return;
     }
     setBusy(true);
@@ -85,7 +89,7 @@ function ProfileForm({ me }: { me: Me }) {
     <form onSubmit={submit} className="w-full flex-1 space-y-6">
       <div>
         <label htmlFor="displayName" className={label}>
-          Display name
+          {t('profile.displayName')}
         </label>
         <div className="relative">
           <UserIcon className="pointer-events-none absolute left-3 top-2.5 text-slate-500" size={18} aria-hidden />
@@ -104,7 +108,7 @@ function ProfileForm({ me }: { me: Me }) {
           />
         </div>
         <p id="displayName-help" className="mt-1 text-xs text-slate-500">
-          2–40 characters. Shown on leaderboards.
+          {t('profile.displayNameHelp')}
         </p>
       </div>
 
@@ -117,7 +121,7 @@ function ProfileForm({ me }: { me: Me }) {
 
       <div>
         <label htmlFor="bio" className={label}>
-          Bio
+          {t('profile.bio')}
         </label>
         <textarea
           id="bio"
@@ -136,12 +140,12 @@ function ProfileForm({ me }: { me: Me }) {
 
       <div className="flex flex-wrap items-center gap-4">
         <button type="submit" className={btnPrimary} disabled={busy || !dirty}>
-          <Save size={16} aria-hidden /> {busy ? 'Saving…' : 'Save changes'}
+          <Save size={16} aria-hidden /> {busy ? t('common.saving') : t('common.saveChanges')}
         </button>
         <span aria-live="polite" className="flex items-center gap-1 text-sm text-emerald-400">
           {saved && (
             <>
-              <Check size={16} aria-hidden /> Profile updated
+              <Check size={16} aria-hidden /> {t('profile.updated')}
             </>
           )}
         </span>
@@ -151,35 +155,36 @@ function ProfileForm({ me }: { me: Me }) {
 }
 
 export function Profile() {
+  const { t } = useTranslation();
   const { me } = useMe();
   if (!me) return null; // guarded by RequireAuth
 
   return (
     <div className="mx-auto max-w-3xl space-y-8">
-      <PageHeader title="Profile" subtitle="How other players see you." />
+      <PageHeader title={t('profile.title')} subtitle={t('profile.subtitle')} />
       <div className="flex flex-col items-start gap-8 rounded-xl border border-slate-800 bg-slate-900 p-6 sm:p-8 md:flex-row">
         <div className="flex w-full shrink-0 flex-col items-center gap-3 text-center md:w-auto">
           {me.avatarUrl ? (
-            <img src={me.avatarUrl} alt={`Avatar of ${me.displayName}`} className="h-28 w-28 rounded-full border-4 border-slate-800 shadow-xl" />
+            <img src={me.avatarUrl} alt={t('profile.avatar', { name: me.displayName })} className="h-28 w-28 rounded-full border-4 border-slate-800 shadow-xl" />
           ) : (
             <span aria-hidden className="flex h-28 w-28 items-center justify-center rounded-full border-4 border-slate-800 bg-slate-800 text-4xl font-bold text-slate-400">
               {me.displayName.slice(0, 1).toUpperCase()}
             </span>
           )}
           <div>
-            <p className="text-xs uppercase tracking-widest text-slate-500">Total score</p>
-            <p className="font-mono text-2xl font-bold text-quantum-400">{formatNumber(me.totalScore)} pts</p>
+            <p className="text-xs uppercase tracking-widest text-slate-500">{t('common.totalScore')}</p>
+            <p className="font-mono text-2xl font-bold text-quantum-400">{t('common.points', { points: formatNumber(me.totalScore) })}</p>
           </div>
           <dl className="space-y-1 text-xs text-slate-500">
             <div>
-              <dt className="inline">Email: </dt>
+              <dt className="inline">{t('profile.email')}</dt>
               <dd className="inline break-all text-slate-400">{me.email}</dd>
             </div>
             <div>
-              <dt className="inline">Member since: </dt>
+              <dt className="inline">{t('profile.memberSince')}</dt>
               <dd className="inline text-slate-400">{formatDate(me.createdAt)}</dd>
             </div>
-            {me.role === 'admin' && <div className="font-mono font-bold text-accent-300">ADMIN</div>}
+            {me.role === 'admin' && <div className="font-mono font-bold text-accent-300">{t('profile.admin')}</div>}
           </dl>
         </div>
         <ProfileForm key={me.id} me={me} />

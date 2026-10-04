@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { Room } from '../lib/game';
 
 export type LogEntry =
@@ -11,6 +12,7 @@ export type LogEntry =
   | { id: number; kind: 'help' };
 
 export function RoomView({ room }: { room: Room }) {
+  const { t } = useTranslation();
   const items = room.items ?? [];
   const exits = room.exits ?? [];
   return (
@@ -19,39 +21,41 @@ export function RoomView({ room }: { room: Room }) {
       <p className="whitespace-pre-line leading-relaxed text-slate-300">{room.description}</p>
       {items.length > 0 && (
         <p className="text-amber-200">
-          <span className="mr-2 text-xs font-bold uppercase text-slate-500">Items:</span>
+          <span className="mr-2 text-xs font-bold uppercase text-slate-500">{t('terminal.items')}</span>
           {items.join(', ')}
         </p>
       )}
       <p className="text-sky-300">
-        <span className="mr-2 text-xs font-bold uppercase text-slate-500">Exits:</span>
-        {exits.length > 0 ? exits.join(', ') : 'none'}
+        <span className="mr-2 text-xs font-bold uppercase text-slate-500">{t('terminal.exits')}</span>
+        {exits.length > 0 ? exits.join(', ') : t('terminal.none')}
       </p>
     </div>
   );
 }
 
-const HELP: [string, string][] = [
-  ['look, l', 'Describe the current room'],
-  ['inventory, i', 'List what you carry'],
-  ['examine, x <thing>', 'Look closely at an item, feature or exit'],
-  ['move, go <exit>', 'Go through an exit (also: n s e w u d, or just the exit name)'],
-  ['take, get <item>', 'Pick up an item'],
-  ['drop <item>', 'Drop an item you carry'],
-  ['use <a> [on|with <b>]', 'Use something, or use two things together'],
-  ['clear', 'Clear the terminal'],
-  ['↑ / ↓', 'Browse command history'],
-];
+/** Command words stay English (the game parses them); only their descriptions are translated. */
+const HELP = [
+  ['look, l', 'look'],
+  ['inventory, i', 'inventory'],
+  ['examine, x <thing>', 'examine'],
+  ['move, go <exit>', 'move'],
+  ['take, get <item>', 'take'],
+  ['drop <item>', 'drop'],
+  ['use <a> [on|with <b>]', 'use'],
+  ['clear', 'clear'],
+  ['↑ / ↓', 'history'],
+] as const;
 
 export function HelpView() {
+  const { t } = useTranslation();
   return (
     <div className="text-slate-400">
-      <p className="mb-1">Available commands:</p>
+      <p className="mb-1">{t('terminal.helpTitle')}</p>
       <dl className="grid gap-x-4 gap-y-0.5 sm:grid-cols-[auto_1fr]">
         {HELP.map(([cmd, desc]) => (
           <div key={cmd} className="contents">
             <dt className="text-white">{cmd}</dt>
-            <dd className="mb-1 sm:mb-0">{desc}</dd>
+            <dd className="mb-1 sm:mb-0">{t(`terminal.help.${desc}`)}</dd>
           </div>
         ))}
       </dl>
@@ -60,6 +64,7 @@ export function HelpView() {
 }
 
 export function LogLine({ entry }: { entry: LogEntry }) {
+  const { t } = useTranslation();
   switch (entry.kind) {
     case 'command':
       return (
@@ -88,7 +93,7 @@ export function LogLine({ entry }: { entry: LogEntry }) {
     case 'error':
       return (
         <p className="text-red-400">
-          <span className="font-bold">[ERROR]</span> {entry.text} {entry.link}
+          <span className="font-bold">{t('terminal.error')}</span> {entry.text} {entry.link}
         </p>
       );
     case 'info':

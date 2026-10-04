@@ -218,11 +218,37 @@ describe('admin', () => {
   it('publishes guides, keeping drafts private', async () => {
     const { app, login } = await setup();
     const boss = await login('Boss');
-    const guide = { title: 'Intro', category: 'General', content: '# Hello', published: false };
+    const guide = { published: false, locales: { en: { title: 'Intro', category: 'General', content: '# Hello' } } };
     expect((await boss.call('/api/admin/guides/intro', { method: 'PUT', body: guide })).status).toBe(201);
     expect((await app.request('/api/guides/intro')).status).toBe(404);
     await boss.call('/api/admin/guides/intro', { method: 'PUT', body: { ...guide, published: true } });
     expect(await (await app.request('/api/guides/intro')).json()).toMatchObject({ content: '# Hello', author: 'Boss' });
+  });
+
+  it('serves guides in the requested language, falling back to English', async () => {
+    const { app, login } = await setup();
+    const boss = await login('Boss');
+    const en = { title: 'Intro', category: 'General', summary: 'Hi', content: '# Hello' };
+    const fr = { title: 'Introduction', category: 'Général', summary: 'Salut', content: '# Bonjour' };
+    await boss.call('/api/admin/guides/intro', { method: 'PUT', body: { published: true, locales: { en, fr } } });
+    await boss.call('/api/admin/guides/english-only', { method: 'PUT', body: { published: true, locales: { en } } });
+
+    expect(await (await app.request('/api/guides/intro?lang=fr')).json()).toMatchObject({
+      lang: 'fr',
+      languages: ['en', 'fr'],
+      title: 'Introduction',
+      content: '# Bonjour',
+    });
+    expect(await (await app.request('/api/guides/english-only?lang=fr')).json()).toMatchObject({ lang: 'en', title: 'Intro' });
+    expect(await (await app.request('/api/guides/intro?lang=xx')).json()).toMatchObject({ lang: 'en' });
+    const list = (await (await app.request('/api/guides?lang=fr')).json()) as Array<{ slug: string; lang: string; content?: string }>;
+    expect(list.map((g) => [g.slug, g.lang])).toEqual(expect.arrayContaining([['intro', 'fr'], ['english-only', 'en']]));
+    expect(list.every((g) => g.content === undefined)).toBe(true);
+
+    const adminView = await (await boss.call('/api/admin/guides/intro')).json();
+    expect(adminView).toMatchObject({ slug: 'intro', locales: { en: { title: 'Intro' }, fr: { title: 'Introduction' } } });
+    const noEnglish = await boss.call('/api/admin/guides/x', { method: 'PUT', body: { published: true, locales: { fr } } });
+    expect(noEnglish.status).toBe(400);
   });
 });
 

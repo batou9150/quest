@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { btnDanger, btnGhost, btnSmall } from './ui';
 
 /**
@@ -7,8 +8,8 @@ import { btnDanger, btnGhost, btnSmall } from './ui';
  */
 export function ConfirmButton({
   children,
-  confirmLabel = 'Confirm',
-  prompt = 'Are you sure?',
+  confirmLabel,
+  prompt,
   onConfirm,
   disabled,
   className,
@@ -24,6 +25,8 @@ export function ConfirmButton({
   small?: boolean;
   ariaLabel?: string;
 }) {
+  const { t } = useTranslation();
+  const promptText = prompt ?? t('common.areYouSure');
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
   const size = small ? btnSmall : '';
@@ -37,8 +40,8 @@ export function ConfirmButton({
   }
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-2" role="group" aria-label={prompt}>
-      <span className="text-xs text-amber-300">{prompt}</span>
+    <span className="inline-flex flex-wrap items-center gap-2" role="group" aria-label={promptText}>
+      <span className="text-xs text-amber-300">{promptText}</span>
       <button
         type="button"
         className={`${btnDanger} ${size}`}
@@ -53,10 +56,10 @@ export function ConfirmButton({
           }
         }}
       >
-        {busy ? 'Working…' : confirmLabel}
+        {busy ? t('common.working') : (confirmLabel ?? t('common.confirm'))}
       </button>
       <button type="button" className={`${btnGhost} ${size}`} disabled={busy} onClick={() => setAsking(false)}>
-        Cancel
+        {t('common.cancel')}
       </button>
     </span>
   );

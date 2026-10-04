@@ -3,6 +3,7 @@ import type { EventSummary, Guide, LeaderboardEntry } from '@quest/shared';
 import { notFound, type AppEnv } from '../http.ts';
 import { paths, type EventDoc, type EventScoreDoc, type GuideDoc } from '../models.ts';
 import { toEventSummary } from '../services/events.ts';
+import { requestedLang, toGuide } from '../services/guides.ts';
 
 const LEADERBOARD_SIZE = 100;
 
@@ -35,10 +36,11 @@ publicRoutes.get('/events/:id/leaderboard', async (c) => {
 
 publicRoutes.get('/guides', async (c) => {
   const { db } = c.get('deps');
+  const lang = requestedLang(c.req.query('lang'));
   const guides = await db.list<GuideDoc>('guides', { where: [['published', '==', true]] });
   return c.json<Guide[]>(
     guides
-      .map((g) => toGuide(g.id, g.data, false))
+      .map((g) => toGuide(g.id, g.data, lang, false))
       .sort((a, b) => b.publishedAt.localeCompare(a.publishedAt)),
   );
 });
@@ -48,19 +50,5 @@ publicRoutes.get('/guides/:slug', async (c) => {
   const guide = await c.get('deps').db.get<GuideDoc>(paths.guide(c.req.param('slug')));
   // Drafts are visible to admins only, for previews.
   if (!guide || (!guide.published && user?.doc.role !== 'admin')) throw notFound('Guide');
-  return c.json<Guide>(toGuide(c.req.param('slug'), guide, true));
+  return c.json<Guide>(toGuide(c.req.param('slug'), guide, requestedLang(c.req.query('lang')), true));
 });
-
-export function toGuide(slug: string, g: GuideDoc, withContent: boolean): Guide {
-  return {
-    slug,
-    title: g.title,
-    category: g.category,
-    author: g.author,
-    summary: g.summary,
-    imageUrl: g.imageUrl,
-    published: g.published,
-    publishedAt: g.publishedAt,
-    ...(withContent ? { content: g.content } : {}),
-  };
-}

@@ -1,4 +1,5 @@
 /** Minimal typed fetch helper for the same-origin backend (/api, /auth, /game). */
+import i18n from '../i18n';
 
 export class ApiError extends Error {
   readonly status: number;
@@ -36,11 +37,11 @@ async function toApiError(res: Response): Promise<ApiError> {
   }
   if (isRecord(body)) {
     const error = typeof body.error === 'string' ? body.error : 'http_error';
-    const message = typeof body.message === 'string' ? body.message : `Request failed (${res.status})`;
+    const message = typeof body.message === 'string' ? body.message : i18n.t('errors.requestFailed', { status: res.status });
     const issues = Array.isArray(body.issues) ? body.issues.filter((i): i is string => typeof i === 'string') : [];
     return new ApiError(res.status, error, message, issues);
   }
-  return new ApiError(res.status, 'http_error', `Request failed (${res.status} ${res.statusText})`);
+  return new ApiError(res.status, 'http_error', i18n.t('errors.requestFailed', { status: `${res.status} ${res.statusText}`.trim() }));
 }
 
 /**
@@ -64,7 +65,7 @@ export async function api<T>(path: string, options: RequestOptions = {}): Promis
     });
   } catch (err) {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
-    throw new ApiError(0, 'network_error', 'Could not reach the server. Check your connection and try again.');
+    throw new ApiError(0, 'network_error', i18n.t('errors.network'));
   }
 
   if (!res.ok) throw await toApiError(res);
@@ -80,5 +81,5 @@ export function isAbortError(err: unknown): boolean {
 /** Human-readable message for any thrown value. */
 export function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;
-  return 'Something went wrong.';
+  return i18n.t('errors.unknown');
 }

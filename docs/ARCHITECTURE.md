@@ -38,6 +38,7 @@ No Firebase products: the browser never talks to Firestore, only to the API.
 | Level content | Only the three demo levels are in this repo; real levels are uploaded through the admin API | The repo is public; level files are the answer key |
 | Admin | `/api/admin/*` + admin pages, for users with `role: "admin"` | Roles, bans, levels, events, guides |
 | Starter content | The demo levels and `content/guides/*.md` are added at startup when missing | A fresh install is playable and documented; admins can edit them afterwards |
+| Languages | Website and guides in English and French; game texts (levels) and API messages in English | Translating levels would change the level format, the engine and every API answer; the guides and UI carry most of the reading |
 
 ## Code layout
 
@@ -45,7 +46,7 @@ No Firebase products: the browser never talks to Firestore, only to the API.
 packages/engine        Pure game engine: level schema (zod) + step(level, state, command). No I/O.
 packages/levels-demo   The three public demo levels (levels/*.json) and their playthrough tests.
 packages/shared        Types and zod schemas of the site API, shared by api and web.
-content/guides         Starter guides (markdown with front matter), seeded at startup.
+content/guides         Starter guides (markdown with front matter): <slug>.md in English, <slug>.fr.md in French. Seeded at startup.
 apps/api               Hono server: routes, auth, Firestore/memory storage, OpenAPI file.
 apps/web               React + Vite + Tailwind front end, including admin pages.
 ```
@@ -74,7 +75,7 @@ The engine is deterministic and side-effect free, so the whole game logic is uni
 | `levels/{levelId}` | full level definition, `published` |
 | `events/{eventId}` | title, descriptions, `startTime`, `endTime`, `levelIds` (empty = all) |
 | `events/{eventId}/scores/{uid}` | `displayName`, `score`, best score per level |
-| `guides/{slug}` | markdown `content`, `category`, `published` |
+| `guides/{slug}` | `locales.en` and optional `locales.fr` (title, category, summary, markdown content), shared `imageUrl`, `published` |
 
 All queries use single-field indexes, which Firestore creates automatically; no composite index is needed. Dates are ISO-8601 strings.
 

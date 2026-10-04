@@ -19,25 +19,28 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { AlertTriangle, ChevronLeft, Maximize2, Minimize2, Network, RotateCcw, X } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { levelGraph, type GraphEdge, type GraphEdgeKind, type GraphNode, type GraphNodeKind, type Level } from '@quest/engine';
 import { useApi } from '../../lib/hooks';
+import { formatNumber } from '../../lib/format';
 import { PageHeader } from '../../components/PageHeader';
 import { ErrorMessage, Loading } from '../../components/Status';
 import { btnGhost, btnSmall, card, chip, chipActive, chipIdle } from '../../components/ui';
 
 // --- Colours and legend ------------------------------------------------------
+// Names are translated at render time: see preview.node.*, preview.edge.* and preview.group.* in the locales.
 
-const NODE_STYLE: Record<GraphNodeKind, { color: string; name: string; width: number; height: number }> = {
-  room: { color: '#22d3ee', name: 'Room', width: 190, height: 58 },
-  finish: { color: '#34d399', name: 'Level exit', width: 150, height: 46 },
-  item: { color: '#fbbf24', name: 'Item', width: 160, height: 46 },
-  flag: { color: '#a78bfa', name: 'Flag (world state)', width: 140, height: 36 },
-  action: { color: '#fb7185', name: 'Action (use rule)', width: 220, height: 60 },
+const NODE_STYLE: Record<GraphNodeKind, { color: string; width: number; height: number }> = {
+  room: { color: '#22d3ee', width: 190, height: 58 },
+  finish: { color: '#34d399', width: 150, height: 46 },
+  item: { color: '#fbbf24', width: 160, height: 46 },
+  flag: { color: '#a78bfa', width: 140, height: 36 },
+  action: { color: '#fb7185', width: 220, height: 60 },
 };
 
 interface EdgeStyle {
   color: string;
-  name: string;
   dashed?: boolean;
   group: EdgeGroup;
 }
@@ -45,24 +48,39 @@ interface EdgeStyle {
 type EdgeGroup = 'map' | 'items' | 'actions' | 'conditions';
 
 const EDGE_STYLE: Record<GraphEdgeKind, EdgeStyle> = {
-  exit: { color: '#22d3ee', name: 'Exit between rooms', group: 'map' },
-  contains: { color: '#fbbf24', name: 'Item lies in room', group: 'items' },
-  uses: { color: '#fb7185', name: 'Item used by action', group: 'actions' },
-  sets: { color: '#a78bfa', name: 'Action sets flag', group: 'actions' },
-  clears: { color: '#e879f9', name: 'Action clears flag', group: 'actions', dashed: true },
-  gives: { color: '#34d399', name: 'Action gives item', group: 'actions' },
-  spawns: { color: '#2dd4bf', name: 'Action drops item in room', group: 'actions' },
-  removes: { color: '#f87171', name: 'Action uses up item', group: 'actions', dashed: true },
-  requires: { color: '#fb923c', name: 'Needed for exit or action', group: 'conditions' },
-  forbids: { color: '#facc15', name: 'Only while flag NOT set', group: 'conditions', dashed: true },
+  exit: { color: '#22d3ee', group: 'map' },
+  contains: { color: '#fbbf24', group: 'items' },
+  uses: { color: '#fb7185', group: 'actions' },
+  sets: { color: '#a78bfa', group: 'actions' },
+  clears: { color: '#e879f9', group: 'actions', dashed: true },
+  gives: { color: '#34d399', group: 'actions' },
+  spawns: { color: '#2dd4bf', group: 'actions' },
+  removes: { color: '#f87171', group: 'actions', dashed: true },
+  requires: { color: '#fb923c', group: 'conditions' },
+  forbids: { color: '#facc15', group: 'conditions', dashed: true },
 };
 
-const GROUPS: Array<{ id: EdgeGroup; name: string; toggle: boolean }> = [
-  { id: 'map', name: 'Map', toggle: false },
-  { id: 'items', name: 'Items in rooms', toggle: true },
-  { id: 'actions', name: 'Actions & effects', toggle: true },
-  { id: 'conditions', name: 'Conditions', toggle: true },
+const GROUPS: Array<{ id: EdgeGroup; toggle: boolean }> = [
+  { id: 'map', toggle: false },
+  { id: 'items', toggle: true },
+  { id: 'actions', toggle: true },
+  { id: 'conditions', toggle: true },
 ];
+
+/**
+ * The engine builds a few labels in English (it has no i18n): the exit node, non-takeable items and the room an action is limited to.
+ * Item, room and exit names are game data and stay as written.
+ */
+function nodeLabel(n: GraphNode, t: TFunction): string {
+  return n.kind === 'finish' ? t('preview.finishLabel') : n.label;
+}
+
+function nodeDetail(n: GraphNode, t: TFunction): string | undefined {
+  if (n.kind === 'item' && n.detail === 'fixed') return t('preview.fixed');
+  const inRoom = n.kind === 'action' && n.detail ? /^in (.+)$/.exec(n.detail) : null;
+  if (inRoom?.[1]) return t('preview.inRoom', { room: inRoom[1] });
+  return n.detail;
+}
 
 // --- Layout ------------------------------------------------------------------
 
@@ -236,9 +254,12 @@ function handlesFor(e: GraphEdge, target: GraphNode): { sourceHandle: string; ta
 // --- Nodes -------------------------------------------------------------------
 
 function QuestNodeView({ data }: NodeProps<QuestNode>) {
+  const { t } = useTranslation();
   const { graph: n, selected } = data;
   const { color } = NODE_STYLE[n.kind];
   const unreachable = n.kind === 'room' && n.reachable === false;
+  const label = nodeLabel(n, t);
+  const detail = nodeDetail(n, t);
   return (
     <div
       className="flex h-full w-full flex-col justify-center rounded-lg border-2 bg-slate-950 px-3 text-left shadow-lg"
@@ -266,21 +287,21 @@ function QuestNodeView({ data }: NodeProps<QuestNode>) {
       )}
       <div className="flex items-center gap-1.5">
         {n.start && (
-          <span className="rounded bg-quantum-500 px-1 font-mono text-[9px] font-bold text-slate-950" aria-label="Start room">
-            START
+          <span className="rounded bg-quantum-500 px-1 font-mono text-[9px] font-bold text-slate-950" aria-label={t('preview.startRoom')}>
+            {t('preview.start')}
           </span>
         )}
         <span
           className={`text-xs font-bold leading-tight text-slate-100 ${n.kind === 'action' ? 'line-clamp-2' : 'truncate'}`}
           style={{ color: n.kind === 'room' ? undefined : color }}
-          title={n.label}
+          title={label}
         >
-          {n.label}
+          {label}
         </span>
       </div>
-      {(n.detail || unreachable) && (
+      {(detail || unreachable) && (
         <span className={`truncate font-mono text-[10px] ${unreachable ? 'text-red-400' : 'text-slate-500'}`}>
-          {unreachable ? 'unreachable' : n.detail}
+          {unreachable ? t('preview.unreachableTag') : detail}
         </span>
       )}
     </div>
@@ -297,10 +318,11 @@ const nodeTypes = { quest: QuestNodeView };
 
 /** Link-group toggles and the colour key. `compact` is the overlay shown in fullscreen. */
 function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>; onToggle: (group: EdgeGroup) => void; compact?: boolean }) {
+  const { t } = useTranslation();
   return (
     <>
-      <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Show links">
-        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-slate-500">Show</span>
+      <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t('preview.showLinks')}>
+        <span className="mr-1 text-xs font-bold uppercase tracking-wider text-slate-500">{t('preview.show')}</span>
         {GROUPS.map((g) => (
           <button
             key={g.id}
@@ -310,7 +332,7 @@ function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>;
             onClick={() => onToggle(g.id)}
             className={`${chip} ${hidden.has(g.id) ? chipIdle : chipActive} disabled:cursor-default`}
           >
-            {g.name}
+            {t(`preview.group.${g.id}`)}
           </button>
         ))}
       </div>
@@ -322,7 +344,7 @@ function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>;
               style={{ borderColor: NODE_STYLE[kind].color, borderRadius: kind === 'flag' ? 999 : 4 }}
               aria-hidden
             />
-            {NODE_STYLE[kind].name}
+            {t(`preview.node.${kind}`)}
           </li>
         ))}
         {(Object.keys(EDGE_STYLE) as GraphEdgeKind[]).map((kind) => (
@@ -338,7 +360,7 @@ function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>;
                 strokeDasharray={EDGE_STYLE[kind].dashed ? '4 3' : undefined}
               />
             </svg>
-            {EDGE_STYLE[kind].name}
+            {t(`preview.edge.${kind}`)}
           </li>
         ))}
       </ul>
@@ -388,6 +410,7 @@ function LevelPreview({ id }: { id: string }) {
   const [fullscreen, setFullscreen] = useState<'off' | 'native' | 'window'>('off');
   const [positions, setPositions] = useState<Positions>(() => loadPositions(id));
   const dragging = useRef(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!dragging.current) savePositions(id, positions);
@@ -476,35 +499,41 @@ function LevelPreview({ id }: { id: string }) {
   return (
     <div className="space-y-6">
       <Link to="/admin/levels" className="inline-flex items-center text-sm text-slate-400 hover:text-white">
-        <ChevronLeft size={16} aria-hidden /> Back to levels
+        <ChevronLeft size={16} aria-hidden /> {t('preview.back')}
       </Link>
       <PageHeader
-        title={level ? `Preview: ${level.title}` : 'Level preview'}
+        title={level ? t('preview.title', { title: level.title }) : t('preview.defaultTitle')}
         subtitle={
-          graph
-            ? `${count('room')} rooms · ${count('item')} items · ${count('action')} actions · ${count('flag')} flags · ${level?.points} pts, par ${level?.par}`
-            : 'How rooms, items and actions connect.'
+          graph && level
+            ? [
+                t('preview.rooms', { count: count('room') }),
+                t('preview.items', { count: count('item') }),
+                t('preview.actions', { count: count('action') }),
+                t('preview.flags', { count: count('flag') }),
+                t('preview.scoring', { points: formatNumber(level.points), par: level.par }),
+              ].join(' · ')
+            : t('preview.defaultSubtitle')
         }
         icon={<Network className="text-quantum-400" aria-hidden />}
       />
 
       {loading && !level ? (
-        <Loading label="Loading level…" />
+        <Loading label={t('preview.loading')} />
       ) : error ? (
-        <ErrorMessage error={error} onRetry={reload} title="Could not load the level" />
+        <ErrorMessage error={error} onRetry={reload} title={t('preview.loadError')} />
       ) : graph && flow ? (
         <>
           {unreachable.length > 0 && (
             <p className="flex items-center gap-2 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
               <AlertTriangle size={16} aria-hidden />
-              No exit leads to: {unreachable.map((n) => n.label).join(', ')}.
+              {t('preview.unreachable', { rooms: unreachable.map((n) => n.label).join(', ') })}
             </p>
           )}
 
           <div className={`${card} space-y-3 p-4`}>
             <Legend hidden={hidden} onToggle={toggle} />
             <p className="text-xs text-slate-500">
-              Dashed exits (🔒) need a condition. Click a node to highlight its links and read its text; drag it to move it.
+              {t('preview.hint')}
             </p>
           </div>
 
@@ -542,13 +571,13 @@ function LevelPreview({ id }: { id: string }) {
               <Controls showInteractive={false} position="bottom-left">
                 <ControlButton
                   onClick={toggleFullscreen}
-                  aria-label={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen'}
-                  title={fullscreen === 'off' ? 'Fullscreen' : 'Exit fullscreen (Esc)'}
+                  aria-label={fullscreen === 'off' ? t('preview.fullscreen') : t('preview.exitFullscreen')}
+                  title={fullscreen === 'off' ? t('preview.fullscreen') : t('preview.exitFullscreenEsc')}
                 >
                   {fullscreen === 'off' ? <Maximize2 aria-hidden style={OUTLINE} /> : <Minimize2 aria-hidden style={OUTLINE} />}
                 </ControlButton>
                 {Object.keys(positions).length > 0 && (
-                  <ControlButton onClick={() => setPositions({})} aria-label="Reset layout" title="Reset layout (undo moved nodes)">
+                  <ControlButton onClick={() => setPositions({})} aria-label={t('preview.resetLayout')} title={t('preview.resetLayoutTitle')}>
                     <RotateCcw aria-hidden style={OUTLINE} />
                   </ControlButton>
                 )}
@@ -560,14 +589,14 @@ function LevelPreview({ id }: { id: string }) {
                 bgColor="#0f172a"
                 maskColor="rgba(2, 6, 23, 0.7)"
                 nodeColor={(n) => NODE_STYLE[(n as QuestNode).data.graph.kind].color}
-                ariaLabel="Level overview"
+                ariaLabel={t('preview.overview')}
               />
             </ReactFlow>
 
             {fullscreen !== 'off' && (
               <details className="absolute left-3 top-3 max-h-[calc(100%-1.5rem)] w-64 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 p-3 shadow-xl">
                 <summary className="cursor-pointer text-sm font-bold text-white">
-                  {level?.title} <span className="font-normal text-slate-400">· legend</span>
+                  {level?.title} <span className="font-normal text-slate-400">· {t('preview.legend')}</span>
                 </summary>
                 <div className="mt-3 space-y-3">
                   <Legend hidden={hidden} onToggle={toggle} compact />
@@ -578,17 +607,17 @@ function LevelPreview({ id }: { id: string }) {
             {selected && (
               <aside
                 className="absolute right-3 top-3 w-72 max-w-[calc(100%-1.5rem)] rounded-lg border border-slate-700 bg-slate-900/95 p-4 shadow-xl"
-                aria-label="Selected node"
+                aria-label={t('preview.selectedNode')}
               >
                 <div className="mb-2 flex items-start justify-between gap-2">
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-wider" style={{ color: NODE_STYLE[selected.kind].color }}>
-                      {NODE_STYLE[selected.kind].name}
-                      {selected.detail ? ` · ${selected.detail}` : ''}
+                      {t(`preview.node.${selected.kind}`)}
+                      {nodeDetail(selected, t) ? ` · ${nodeDetail(selected, t)}` : ''}
                     </p>
-                    <h2 className="font-bold text-white">{selected.label}</h2>
+                    <h2 className="font-bold text-white">{nodeLabel(selected, t)}</h2>
                   </div>
-                  <button type="button" className={`${btnGhost} ${btnSmall}`} onClick={() => setSelectedId(null)} aria-label="Close details">
+                  <button type="button" className={`${btnGhost} ${btnSmall}`} onClick={() => setSelectedId(null)} aria-label={t('preview.closeDetails')}>
                     <X size={14} aria-hidden />
                   </button>
                 </div>
@@ -601,8 +630,10 @@ function LevelPreview({ id }: { id: string }) {
                       const other = graph.nodes.find((n) => n.id === (out ? e.target : e.source));
                       return (
                         <li key={e.id} style={{ color: EDGE_STYLE[e.kind].color }}>
-                          {out ? '→' : '←'} {e.kind}
-                          {e.label ? ` (${e.label})` : ''}: <span className="text-slate-300">{other?.label}</span>
+                          {out ? '→' : '←'} {t(`preview.edgeShort.${e.kind}`)}
+                          {e.label ? ` (${e.label})` : ''}
+                          {t('preview.separator')}
+                          <span className="text-slate-300">{other ? nodeLabel(other, t) : ''}</span>
                         </li>
                       );
                     })}

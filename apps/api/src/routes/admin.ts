@@ -5,6 +5,8 @@ import {
   EventInputSchema,
   GuideInputSchema,
   SLUG_PATTERN,
+  DEFAULT_LANG,
+  type AdminGuide,
   type AdminLevel,
   type AdminUser,
   type EventSummary,
@@ -17,7 +19,7 @@ import { requireAdmin, requireUser } from '../auth/session.ts';
 import { body, HttpError, notFound, type AppEnv } from '../http.ts';
 import { paths, type EventDoc, type GuideDoc, type LevelDoc, type UserDoc } from '../models.ts';
 import { toEventSummary } from '../services/events.ts';
-import { toGuide } from './public.ts';
+import { toAdminGuide, toGuide } from '../services/guides.ts';
 
 const PAGE_SIZE = 50;
 
@@ -191,7 +193,15 @@ admin.delete('/events/:id', async (c) => {
 
 admin.get('/guides', async (c) => {
   const docs = await c.get('deps').db.list<GuideDoc>('guides');
-  return c.json<Guide[]>(docs.map((g) => toGuide(g.id, g.data, false)).sort((a, b) => a.title.localeCompare(b.title)));
+  return c.json<Guide[]>(
+    docs.map((g) => toGuide(g.id, g.data, DEFAULT_LANG, false)).sort((a, b) => a.title.localeCompare(b.title)),
+  );
+});
+
+admin.get('/guides/:slug', async (c) => {
+  const guide = await c.get('deps').db.get<GuideDoc>(paths.guide(c.req.param('slug')));
+  if (!guide) throw notFound('Guide');
+  return c.json<AdminGuide>(toAdminGuide(c.req.param('slug'), guide));
 });
 
 admin.put('/guides/:slug', async (c) => {
@@ -208,7 +218,7 @@ admin.put('/guides/:slug', async (c) => {
     updatedAt: stamp,
   };
   await db.set(paths.guide(slug), guide);
-  return c.json<Guide>(toGuide(slug, guide, true), existing ? 200 : 201);
+  return c.json<AdminGuide>(toAdminGuide(slug, guide), existing ? 200 : 201);
 });
 
 admin.delete('/guides/:slug', async (c) => {

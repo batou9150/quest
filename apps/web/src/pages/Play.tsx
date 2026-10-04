@@ -1,48 +1,64 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link } from 'react-router';
 import { Send, Terminal as TerminalIcon, Trophy } from 'lucide-react';
+import { Trans, useTranslation } from 'react-i18next';
 import type { LevelSummary } from '@quest/shared';
 import { ApiError, errorMessage } from '../lib/api';
 import { game, isLevelFinished, parseCommand, type LevelFinished, type Room } from '../lib/game';
 import { useApi } from '../lib/hooks';
 import { useMe } from '../lib/auth';
 import { formatNumber } from '../lib/format';
+import i18n from '../i18n';
 import { LogLine, type LogEntry } from '../components/Terminal';
 import { btnPrimary } from '../components/ui';
 
 type NewEntry = LogEntry extends infer E ? (E extends LogEntry ? Omit<E, 'id'> : never) : never;
 
 function FinishedBanner({ result }: { result: LevelFinished }) {
+  const { t } = useTranslation();
   return (
     <div role="status" className="flex flex-col gap-4 rounded-xl border border-emerald-700/60 bg-emerald-950/40 p-5 sm:flex-row sm:items-center">
       <Trophy size={32} className="shrink-0 text-amber-300" aria-hidden />
       <div className="flex-1">
-        <p className="font-bold text-emerald-300">Level complete!</p>
+        <p className="font-bold text-emerald-300">{t('play.complete')}</p>
         <p className="text-sm text-slate-300">{result.message}</p>
       </div>
       <div className="text-left sm:text-right">
-        <p className="text-xs uppercase tracking-widest text-slate-500">Score</p>
+        <p className="text-xs uppercase tracking-widest text-slate-500">{t('play.score')}</p>
         <p className="font-mono text-3xl font-bold text-quantum-300">{formatNumber(result.score)}</p>
       </div>
       <Link to="/level-select" className={btnPrimary}>
-        Level Select
+        {t('nav.levelSelect')}
       </Link>
     </div>
   );
 }
 
-const levelSelectLink = (
-  <Link to="/level-select" className="text-quantum-400 underline">
-    Go to Level Select
-  </Link>
-);
+function LevelSelectLink() {
+  const { t } = useTranslation();
+  return (
+    <Link to="/level-select" className="text-quantum-400 underline">
+      {t('play.goToLevelSelect')}
+    </Link>
+  );
+}
+
+function LoginLink() {
+  const { t } = useTranslation();
+  return (
+    <Link to="/login" className="text-quantum-400 underline">
+      {t('play.logInAgain')}
+    </Link>
+  );
+}
 
 export function Play() {
+  const { t } = useTranslation();
   const { refresh } = useMe();
   const { data: levels } = useApi<LevelSummary[]>('/api/levels');
   const activeLevel = levels?.find((l) => l.active);
 
-  const [log, setLog] = useState<LogEntry[]>(() => [{ id: -1, kind: 'info', text: 'Connecting to the Quantum mainframe…' }]);
+  const [log, setLog] = useState<LogEntry[]>(() => [{ id: -1, kind: 'info', text: t('play.connecting') }]);
   const [room, setRoom] = useState<Room | null>(null);
   const [finished, setFinished] = useState<LevelFinished | null>(null);
   const [noActiveLevel, setNoActiveLevel] = useState(false);
@@ -59,28 +75,21 @@ export function Play() {
     setLog((prev) => [...prev, ...entries.map((e) => ({ ...e, id: nextId.current++ }) as LogEntry)]);
   }, []);
 
+  // Log lines are printed once, in the language of the moment; i18n.t (stable) keeps these callbacks from re-running on a language switch.
   const pushError = useCallback(
     (err: unknown) => {
       if (err instanceof ApiError) {
         if (err.status === 409) {
           setNoActiveLevel(true);
-          push({ kind: 'error', text: err.message || 'No active level. Start one from Level Select.', link: levelSelectLink });
+          push({ kind: 'error', text: err.message || i18n.t('play.noActiveLevelError'), link: <LevelSelectLink /> });
           return;
         }
         if (err.status === 401) {
-          push({
-            kind: 'error',
-            text: 'Your session has expired.',
-            link: (
-              <Link to="/login" className="text-quantum-400 underline">
-                Log in again
-              </Link>
-            ),
-          });
+          push({ kind: 'error', text: i18n.t('play.sessionExpired'), link: <LoginLink /> });
           return;
         }
         if (err.status === 429) {
-          push({ kind: 'error', text: `${err.message} Slow down a little.` });
+          push({ kind: 'error', text: i18n.t('play.slowDown', { message: err.message }) });
           return;
         }
       }
@@ -96,7 +105,7 @@ export function Play() {
       .then((r) => {
         if (cancelled) return;
         setRoom(r);
-        push({ kind: 'info', text: 'Session established. Type "help" for commands.' }, { kind: 'room', room: r });
+        push({ kind: 'info', text: i18n.t('play.established') }, { kind: 'room', room: r });
       })
       .catch((err: unknown) => {
         if (!cancelled) pushError(err);
@@ -120,10 +129,10 @@ export function Play() {
         setLog([]);
         return;
       case 'usage':
-        push({ kind: 'info', text: cmd.message });
+        push({ kind: 'info', text: t(`play.usage.${cmd.verb}`) });
         return;
       case 'unknown':
-        push({ kind: 'info', text: `Unknown command "${cmd.verb}". Type "help" for the list of commands.` });
+        push({ kind: 'info', text: t('play.unknownCommand', { verb: cmd.verb }) });
         return;
       case 'look': {
         const r = await game.look();
@@ -133,7 +142,7 @@ export function Play() {
       }
       case 'inventory': {
         const { inventory } = await game.inventory();
-        push({ kind: 'list', title: 'Inventory', items: inventory, empty: 'You are carrying nothing.' });
+        push({ kind: 'list', title: t('play.inventory'), items: inventory, empty: t('play.carryingNothing') });
         return;
       }
       case 'examine': {
@@ -145,7 +154,7 @@ export function Play() {
         const result = await game.move(cmd.exit);
         if (isLevelFinished(result)) {
           setFinished(result);
-          push({ kind: 'text', text: result.message }, { kind: 'info', text: `Level complete — score: ${result.score}.` });
+          push({ kind: 'text', text: result.message }, { kind: 'info', text: t('play.completeLog', { score: formatNumber(result.score) }) });
           void refresh();
         } else {
           setRoom(result);
@@ -216,20 +225,19 @@ export function Play() {
       {finished && <FinishedBanner result={finished} />}
       {noActiveLevel && !finished && (
         <div role="alert" className="rounded-xl border border-amber-800/60 bg-amber-950/30 p-4 text-amber-200">
-          You have no active level. Start or resume one from{' '}
-          <Link to="/level-select" className="font-bold text-quantum-400 underline">
-            Level Select
-          </Link>{' '}
-          first.
+          <Trans i18nKey="play.noActiveLevel" components={{ a: <Link to="/level-select" className="font-bold text-quantum-400 underline" /> }} />
         </div>
       )}
 
-      <section aria-label="Game terminal" className="flex h-[calc(100dvh-12rem)] min-h-[24rem] flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-2xl md:h-[calc(100dvh-10rem)]">
+      <section aria-label={t('play.terminal')} className="flex h-[calc(100dvh-12rem)] min-h-[24rem] flex-col overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-2xl md:h-[calc(100dvh-10rem)]">
         <div className="flex items-center gap-2 border-b border-slate-800 bg-slate-900 px-3 py-2.5">
           <TerminalIcon size={16} className="shrink-0 text-quantum-400" aria-hidden />
           <span className="truncate font-mono text-xs text-slate-400">
-            REMOTE_UPLINK // {activeLevel ? `LVL ${String(activeLevel.number).padStart(2, '0')} ${activeLevel.title.toUpperCase()}` : 'NO LEVEL'} //{' '}
-            {room?.name.toUpperCase() ?? 'INITIALIZING'}
+            REMOTE_UPLINK //{' '}
+            {activeLevel
+              ? t('play.levelTag', { number: String(activeLevel.number).padStart(2, '0'), title: activeLevel.title.toUpperCase() })
+              : t('play.noLevel')}{' '}
+            // {room?.name.toUpperCase() ?? t('play.initializing')}
           </span>
         </div>
 
@@ -247,7 +255,7 @@ export function Play() {
               $
             </span>
             <label htmlFor="cmd-input" className="sr-only">
-              Command
+              {t('play.command')}
             </label>
             <input
               id="cmd-input"
@@ -257,7 +265,7 @@ export function Play() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
               className="w-full rounded-lg border border-slate-700 bg-slate-950 py-2.5 pl-8 pr-3 font-mono text-emerald-400 placeholder-slate-700 focus:border-quantum-500 focus:outline-none focus:ring-1 focus:ring-quantum-500/50"
-              placeholder="Enter command… (try: help)"
+              placeholder={t('play.placeholder')}
               autoFocus
               autoComplete="off"
               autoCapitalize="off"
@@ -265,7 +273,7 @@ export function Play() {
               spellCheck={false}
             />
           </div>
-          <button type="submit" aria-label="Send command" disabled={busy || !input.trim()} className="rounded-lg bg-quantum-600 px-4 text-white transition-colors hover:bg-quantum-500 disabled:opacity-50">
+          <button type="submit" aria-label={t('play.send')} disabled={busy || !input.trim()} className="rounded-lg bg-quantum-600 px-4 text-white transition-colors hover:bg-quantum-500 disabled:opacity-50">
             <Send size={18} aria-hidden />
           </button>
         </form>
