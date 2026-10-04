@@ -35,6 +35,8 @@ export interface GraphNode {
   start?: boolean;
   /** Rooms only: false when no chain of exits leads there from the start room. */
   reachable?: boolean;
+  /** Actions only: id of the room node the rule is limited to. */
+  room?: string;
 }
 
 export interface GraphEdge {
@@ -118,6 +120,7 @@ export function levelGraph(level: Level): LevelGraph {
       label: rule.on ? `use ${name(rule.use)} on ${name(rule.on)}` : `use ${name(rule.use)}`,
       detail: rule.room ? `in ${world.rooms[rule.room]?.name ?? rule.room}` : undefined,
       description: rule.message,
+      ...(rule.room ? { room: roomId(rule.room) } : {}),
     });
     if (world.items[rule.use]) edge('uses', itemId(rule.use), id, 'use');
     if (rule.on && world.items[rule.on]) edge('uses', itemId(rule.on), id, 'on');

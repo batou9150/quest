@@ -68,32 +68,123 @@ const GROUPS: Array<{ id: EdgeGroup; name: string; toggle: boolean }> = [
 
 type QuestNode = Node<{ graph: GraphNode; selected: boolean }, 'quest'>;
 
-/** Left-to-right layered layout. Exits weigh more, so the map forms the backbone from entrance to exit. */
+const isPlace = (n: GraphNode) => n.kind === 'room' || n.kind === 'finish';
+
+/** Spacing of the room map, and of each room's group of items, actions and flags. */
+const MAP = { nodesep: 60, ranksep: 110 };
+const GROUP = { nodesep: 14, ranksep: 46, gap: 36, indent: 20 };
+
+/**
+ * Picks the room each item, action and flag is drawn under: where an item lies at the start,
+ * the room an action is limited to (or where its fixed object, else the item it uses, lies), where a flag is set.
+ * Items created by an action follow that action. Anything left goes under the start room.
+ */
+function anchorRooms(nodes: GraphNode[], edges: GraphEdge[]): Map<string, string> {
+  const anchor = new Map<string, string>();
+  for (const n of nodes) if (n.kind === 'room') anchor.set(n.id, n.id);
+  for (const n of nodes) if (n.kind === 'action' && n.room) anchor.set(n.id, n.room);
+  for (const e of edges) if (e.kind === 'contains') anchor.set(e.target, e.source);
+  // An action happens where its fixed object is (you carry the other item there): use the reactor, not the fuse.
+  const byId = new Map(nodes.map((n) => [n.id, n]));
+  for (const e of edges) {
+    const item = byId.get(e.source);
+    if (e.kind === 'uses' && item?.detail === 'fixed' && anchor.has(e.source) && !anchor.has(e.target)) {
+      anchor.set(e.target, anchor.get(e.source)!);
+    }
+  }
+  // Propagate along action links until nothing changes (chains: item → action → flag → ...).
+  const follows: GraphEdgeKind[] = ['uses', 'sets', 'clears', 'gives', 'spawns'];
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const e of edges) {
+      if (!follows.includes(e.kind) || anchor.has(e.target) || !anchor.has(e.source)) continue;
+      anchor.set(e.target, anchor.get(e.source)!);
+      changed = true;
+    }
+  }
+  const start = nodes.find((n) => n.start)?.id;
+  for (const n of nodes) if (!anchor.has(n.id) && !isPlace(n) && start) anchor.set(n.id, start);
+  return anchor;
+}
+
+/** Lays out a room's group left to right; returns positions relative to the group's top-left corner. */
+function layoutGroup(members: GraphNode[], edges: GraphEdge[]) {
+  const ids = new Set(members.map((n) => n.id));
+  const g = new Graph({ multigraph: true });
+  g.setGraph({ rankdir: 'LR', nodesep: GROUP.nodesep, ranksep: GROUP.ranksep });
+  g.setDefaultEdgeLabel(() => ({}));
+  for (const n of members) g.setNode(n.id, { width: NODE_STYLE[n.kind].width, height: NODE_STYLE[n.kind].height });
+  for (const e of edges) if (ids.has(e.source) && ids.has(e.target)) g.setEdge(e.source, e.target, {}, e.id);
+  layout(g);
+  const positions = new Map<string, XYPosition>();
+  let width = 0;
+  let height = 0;
+  for (const n of members) {
+    const { x, y } = g.node(n.id);
+    const { width: w, height: h } = NODE_STYLE[n.kind];
+    positions.set(n.id, { x: x - w / 2, y: y - h / 2 });
+    width = Math.max(width, x + w / 2);
+    height = Math.max(height, y + h / 2);
+  }
+  return { positions, width, height };
+}
+
+/**
+ * Two-level layout: the rooms form a left-to-right map from entrance to exit, and under each room
+ * sits its own group of items, actions and flags. Each room is laid out as a box big enough for its group.
+ */
 function layoutGraph(
   nodes: GraphNode[],
   edges: GraphEdge[],
   selectedId: string | null,
 ): { nodes: QuestNode[]; edges: Edge[]; entrance: Array<{ id: string }> } {
-  const g = new Graph({ multigraph: true });
-  g.setGraph({ rankdir: 'LR', nodesep: 28, ranksep: 70, marginx: 20, marginy: 20 });
-  g.setDefaultEdgeLabel(() => ({}));
-  for (const n of nodes) g.setNode(n.id, { width: NODE_STYLE[n.kind].width, height: NODE_STYLE[n.kind].height });
-  // Exits leading back toward the start would create loops; leave them out of the layout (they are still drawn).
-  for (const e of edges.filter((e) => !e.backward)) {
-    g.setEdge(e.source, e.target, { weight: e.kind === 'exit' ? 8 : 1, minlen: 1 }, e.id);
+  const anchor = anchorRooms(nodes, edges);
+  const groups = new Map<string, ReturnType<typeof layoutGroup>>();
+  for (const room of nodes.filter((n) => n.kind === 'room')) {
+    const members = nodes.filter((n) => !isPlace(n) && anchor.get(n.id) === room.id);
+    if (members.length) groups.set(room.id, layoutGroup(members, edges));
   }
-  layout(g);
 
-  const left = Math.min(...nodes.map((n) => g.node(n.id).x));
+  const map = new Graph();
+  map.setGraph({ rankdir: 'LR', nodesep: MAP.nodesep, ranksep: MAP.ranksep, marginx: 20, marginy: 20 });
+  map.setDefaultEdgeLabel(() => ({}));
+  const box = (n: GraphNode) => {
+    const { width, height } = NODE_STYLE[n.kind];
+    const group = groups.get(n.id);
+    return group
+      ? { width: Math.max(width, GROUP.indent + group.width), height: height + GROUP.gap + group.height }
+      : { width, height };
+  };
+  for (const n of nodes.filter(isPlace)) map.setNode(n.id, box(n));
+  // Only forward exits shape the map; exits back toward the start would create loops.
+  for (const e of edges) if (e.kind === 'exit' && !e.backward) map.setEdge(e.source, e.target);
+  layout(map);
+
+  const positions = new Map<string, XYPosition>();
+  for (const n of nodes.filter(isPlace)) {
+    const { x, y } = map.node(n.id);
+    const { width, height } = box(n);
+    const topLeft = { x: x - width / 2, y: y - height / 2 };
+    positions.set(n.id, topLeft);
+    const group = groups.get(n.id);
+    for (const [id, p] of group?.positions ?? []) {
+      positions.set(id, {
+        x: topLeft.x + GROUP.indent + p.x,
+        y: topLeft.y + NODE_STYLE[n.kind].height + GROUP.gap + p.y,
+      });
+    }
+  }
+
+  const left = Math.min(...[...positions.values()].map((p) => p.x));
+  const byId = new Map(nodes.map((n) => [n.id, n]));
   return {
-    entrance: nodes.filter((n) => g.node(n.id).x - left < 1100).map((n) => ({ id: n.id })),
+    entrance: nodes.filter((n) => positions.get(n.id)!.x - left < 1100).map((n) => ({ id: n.id })),
     nodes: nodes.map((n) => {
-      const { x, y } = g.node(n.id);
       const { width, height } = NODE_STYLE[n.kind];
       return {
         id: n.id,
         type: 'quest',
-        position: { x: x - width / 2, y: y - height / 2 },
+        position: positions.get(n.id)!,
         data: { graph: n, selected: n.id === selectedId },
         width,
         height,
@@ -110,6 +201,8 @@ function layoutGraph(
         id: e.id,
         source: e.source,
         target: e.target,
+        ...handlesFor(e, byId.get(e.target)!),
+        type: e.kind === 'contains' ? 'smoothstep' : 'default',
         label,
         animated: e.kind === 'exit' && touchesSelection,
         style: {
@@ -128,6 +221,18 @@ function layoutGraph(
   };
 }
 
+/**
+ * Which side of each node a link uses (see the handles in QuestNodeView):
+ * forward exits right → left in the upper half, exits back left → right in the lower half (two lanes),
+ * a room's items hang from its bottom, conditions on an exit arrive at the bottom of the room it opens.
+ */
+function handlesFor(e: GraphEdge, target: GraphNode): { sourceHandle: string; targetHandle: string } {
+  if (e.kind === 'exit') return e.backward ? { sourceHandle: 'back-out', targetHandle: 'back-in' } : { sourceHandle: 'out', targetHandle: 'in' };
+  if (e.kind === 'contains') return { sourceHandle: 'down', targetHandle: 'in' };
+  if (isPlace(target)) return { sourceHandle: 'out', targetHandle: 'cond' };
+  return { sourceHandle: 'out', targetHandle: 'in' };
+}
+
 // --- Nodes -------------------------------------------------------------------
 
 function QuestNodeView({ data }: NodeProps<QuestNode>) {
@@ -144,7 +249,21 @@ function QuestNodeView({ data }: NodeProps<QuestNode>) {
         borderRadius: n.kind === 'flag' ? 999 : undefined,
       }}
     >
-      <Handle type="target" position={Position.Left} className="!h-1 !w-1 !border-0 !bg-transparent" />
+      {isPlace(n) ? (
+        <>
+          <Handle id="in" type="target" position={Position.Left} style={{ top: '35%' }} className={HANDLE} />
+          <Handle id="out" type="source" position={Position.Right} style={{ top: '35%' }} className={HANDLE} />
+          <Handle id="back-out" type="source" position={Position.Left} style={{ top: '72%' }} className={HANDLE} />
+          <Handle id="back-in" type="target" position={Position.Right} style={{ top: '72%' }} className={HANDLE} />
+          <Handle id="down" type="source" position={Position.Bottom} style={{ left: 24 }} className={HANDLE} />
+          <Handle id="cond" type="target" position={Position.Bottom} style={{ left: '70%' }} className={HANDLE} />
+        </>
+      ) : (
+        <>
+          <Handle id="in" type="target" position={Position.Left} className={HANDLE} />
+          <Handle id="out" type="source" position={Position.Right} className={HANDLE} />
+        </>
+      )}
       <div className="flex items-center gap-1.5">
         {n.start && (
           <span className="rounded bg-quantum-500 px-1 font-mono text-[9px] font-bold text-slate-950" aria-label="Start room">
@@ -164,10 +283,11 @@ function QuestNodeView({ data }: NodeProps<QuestNode>) {
           {unreachable ? 'unreachable' : n.detail}
         </span>
       )}
-      <Handle type="source" position={Position.Right} className="!h-1 !w-1 !border-0 !bg-transparent" />
     </div>
   );
 }
+
+const HANDLE = '!h-1 !w-1 !min-h-0 !min-w-0 !border-0 !bg-transparent';
 
 const nodeTypes = { quest: QuestNodeView };
 
@@ -227,7 +347,8 @@ function Legend({ hidden, onToggle, compact = false }: { hidden: Set<EdgeGroup>;
 // --- Moved nodes ---------------------------------------------------------------
 
 type Positions = Record<string, XYPosition>;
-const positionsKey = (levelId: string) => `quest.preview.positions.${levelId}`;
+// Bump the version when the automatic layout changes: positions saved for an older layout would be misplaced.
+const positionsKey = (levelId: string) => `quest.preview.positions.v2.${levelId}`;
 
 /** Node positions moved by hand, kept per level in this browser only. */
 function loadPositions(levelId: string): Positions {

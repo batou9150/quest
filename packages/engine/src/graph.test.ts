@@ -63,7 +63,7 @@ describe('levelGraph', () => {
     expect(edgesOf('contains')).toEqual(['room:a -> item:key', 'room:b -> item:door']);
     expect(edgesOf('uses')).toEqual(['item:key -> action:0 [use]', 'item:door -> action:0 [on]', 'item:door -> action:1 [use]']);
     const action = levelGraph(level).nodes.find((n) => n.id === 'action:0');
-    expect(action).toMatchObject({ label: 'use Brass Key on Door', detail: 'in Vault', description: 'Click.' });
+    expect(action).toMatchObject({ label: 'use Brass Key on Door', detail: 'in Vault', description: 'Click.', room: 'room:b' });
   });
 
   it('links actions to their effects and conditions', () => {
