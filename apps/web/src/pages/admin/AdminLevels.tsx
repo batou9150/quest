@@ -1,14 +1,13 @@
 import { useState, type ChangeEvent } from 'react';
-import { Link } from 'react-router';
 import { Eye, EyeOff, FileJson, Layers, Network, Pencil, Trash2, Upload, X } from 'lucide-react';
 import type { AdminLevel, AdminLevelPatch } from '@quest/shared';
 import { api, ApiError, errorMessage } from '../../lib/api';
 import { useApi } from '../../lib/hooks';
 import { formatDateTime } from '../../lib/format';
 import { PageHeader } from '../../components/PageHeader';
-import { ConfirmButton } from '../../components/ConfirmButton';
+import { ActionMenu } from '../../components/ActionMenu';
 import { Empty, ErrorMessage, InlineError, Loading } from '../../components/Status';
-import { btnGhost, btnPrimary, btnSecondary, btnSmall, card, input, label } from '../../components/ui';
+import { btnDanger, btnGhost, btnPrimary, btnSecondary, btnSmall, card, input, label } from '../../components/ui';
 
 function UploadPanel({ initial, onUploaded, onClose }: { initial: string; onUploaded: () => void; onClose: () => void }) {
   const [text, setText] = useState(initial);
@@ -137,6 +136,21 @@ function LevelJson({ id, onEdit, onClose }: { id: string; onEdit: (json: string)
 function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: () => void; onView: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+
+  const deleteLevel = async () => {
+    setBusy(true);
+    setError(null);
+    try {
+      await api<void>(`/api/admin/levels/${encodeURIComponent(level.id)}`, { method: 'DELETE' });
+      onChanged();
+    } catch (err) {
+      setError(errorMessage(err));
+      setConfirmingDelete(false);
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const togglePublished = async () => {
     setBusy(true);
@@ -179,31 +193,27 @@ function LevelRow({ level, onChanged, onView }: { level: AdminLevel; onChanged: 
           {level.published ? 'Published' : 'Draft'}
         </button>
       </td>
-      <td className="px-4 py-3">
-        <div className="flex flex-wrap gap-2">
-          <Link to={`/admin/levels/${encodeURIComponent(level.id)}/preview`} className={`${btnSecondary} ${btnSmall}`}>
-            <Network size={14} aria-hidden /> Preview
-          </Link>
-          <button type="button" className={`${btnSecondary} ${btnSmall}`} onClick={onView}>
-            <FileJson size={14} aria-hidden /> JSON
-          </button>
-          <ConfirmButton
-            small
-            ariaLabel={`Delete level ${level.title}`}
-            prompt="Delete this level?"
-            confirmLabel="Delete"
-            onConfirm={async () => {
-              try {
-                await api<void>(`/api/admin/levels/${encodeURIComponent(level.id)}`, { method: 'DELETE' });
-                onChanged();
-              } catch (err) {
-                setError(errorMessage(err));
-              }
-            }}
-          >
-            <Trash2 size={14} aria-hidden /> Delete
-          </ConfirmButton>
-        </div>
+      <td className="px-4 py-3 text-right">
+        {confirmingDelete ? (
+          <span className="inline-flex flex-wrap items-center justify-end gap-2" role="group" aria-label={`Delete level ${level.title}?`}>
+            <span className="text-xs text-amber-300">Delete this level?</span>
+            <button type="button" className={`${btnDanger} ${btnSmall}`} disabled={busy} onClick={deleteLevel}>
+              {busy ? 'Deleting…' : 'Delete'}
+            </button>
+            <button type="button" className={`${btnGhost} ${btnSmall}`} disabled={busy} onClick={() => setConfirmingDelete(false)}>
+              Cancel
+            </button>
+          </span>
+        ) : (
+          <ActionMenu
+            label={`Actions for ${level.title}`}
+            items={[
+              { label: 'Preview', icon: <Network size={15} aria-hidden />, to: `/admin/levels/${encodeURIComponent(level.id)}/preview` },
+              { label: 'View JSON', icon: <FileJson size={15} aria-hidden />, onSelect: onView },
+              { label: 'Delete…', icon: <Trash2 size={15} aria-hidden />, danger: true, onSelect: () => setConfirmingDelete(true) },
+            ]}
+          />
+        )}
         {error && <InlineError>{error}</InlineError>}
       </td>
     </tr>
@@ -246,14 +256,16 @@ export function AdminLevels() {
         <Empty>No levels yet. Upload one to get started.</Empty>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-900">
-          <table className="w-full min-w-[44rem] text-left text-sm">
+          <table className="w-full min-w-[36rem] text-left text-sm">
             <thead className="bg-slate-950 font-mono text-xs uppercase text-slate-400">
               <tr>
                 <th scope="col" className="px-4 py-3">#</th>
                 <th scope="col" className="px-4 py-3">Level</th>
                 <th scope="col" className="px-4 py-3">Scoring</th>
                 <th scope="col" className="px-4 py-3">Status</th>
-                <th scope="col" className="px-4 py-3">Actions</th>
+                <th scope="col" className="px-4 py-3 text-right">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
