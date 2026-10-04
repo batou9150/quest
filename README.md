@@ -69,6 +69,7 @@ gcloud emulators firestore start --host-port=localhost:8681
 | `npm run build` | Web app to `apps/web/dist`, API bundle to `apps/api/dist` |
 | `npm run levels:push -- <files> [--publish] [--dry-run]` | Validate and upload levels (see [docs/LEVELS.md](docs/LEVELS.md)) |
 | `docker build -t quest .` | Production image |
+| `node --test examples/client-node/*.test.mjs`, `pytest examples/agent-adk-python` | Reference solution tests (see [examples/](examples)) |
 
 ## Docs
 
