@@ -414,7 +414,6 @@
     "resetLayout": "Reset layout",
     "resetLayoutTitle": "Reset layout (undo moved nodes)",
     "overview": "Level overview",
-    "legend": "legend",
     "selectedNode": "Selected node",
     "closeDetails": "Close details",
     "separator": ": ",
@@ -462,7 +461,8 @@
       "items": "Items in rooms",
       "actions": "Actions & effects",
       "conditions": "Conditions"
-    }
+    },
+    "legendTitle": "Legend & filters"
   },
   "adminGuides": {
     "title": "Guides",

@@ -419,7 +419,6 @@
     "resetLayout": "Réinitialiser la disposition",
     "resetLayoutTitle": "Réinitialiser la disposition (annuler les déplacements)",
     "overview": "Vue d'ensemble du niveau",
-    "legend": "légende",
     "selectedNode": "Nœud sélectionné",
     "closeDetails": "Fermer les détails",
     "separator": " : ",
@@ -467,7 +466,8 @@
       "items": "Objets dans les pièces",
       "actions": "Actions et effets",
       "conditions": "Conditions"
-    }
+    },
+    "legendTitle": "Légende et filtres"
   },
   "adminGuides": {
     "title": "Guides",

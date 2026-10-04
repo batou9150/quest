@@ -26,7 +26,7 @@ import { useApi } from '../../lib/hooks';
 import { formatNumber } from '../../lib/format';
 import { PageHeader } from '../../components/PageHeader';
 import { ErrorMessage, Loading } from '../../components/Status';
-import { btnGhost, btnSmall, card, chip, chipActive, chipIdle } from '../../components/ui';
+import { btnGhost, btnSmall, chip, chipActive, chipIdle } from '../../components/ui';
 
 // --- Colours and legend ------------------------------------------------------
 // Names are translated at render time: see preview.node.*, preview.edge.* and preview.group.* in the locales.
@@ -497,25 +497,28 @@ function LevelPreview({ id }: { id: string }) {
     });
 
   return (
-    <div className="space-y-6">
-      <Link to="/admin/levels" className="inline-flex items-center text-sm text-slate-400 hover:text-white">
+    // One screen tall (minus the header and the page padding): the title keeps its size, the graph takes the rest.
+    <div className="flex h-[calc(100dvh-7rem)] min-h-[30rem] flex-col gap-4 md:h-[calc(100dvh-9rem)]">
+      <Link to="/admin/levels" className="inline-flex shrink-0 items-center self-start text-sm text-slate-400 hover:text-white">
         <ChevronLeft size={16} aria-hidden /> {t('preview.back')}
       </Link>
-      <PageHeader
-        title={level ? t('preview.title', { title: level.title }) : t('preview.defaultTitle')}
-        subtitle={
-          graph && level
-            ? [
-                t('preview.rooms', { count: count('room') }),
-                t('preview.items', { count: count('item') }),
-                t('preview.actions', { count: count('action') }),
-                t('preview.flags', { count: count('flag') }),
-                t('preview.scoring', { points: formatNumber(level.points), par: level.par }),
-              ].join(' · ')
-            : t('preview.defaultSubtitle')
-        }
-        icon={<Network className="text-quantum-400" aria-hidden />}
-      />
+      <div className="shrink-0">
+        <PageHeader
+          title={level ? t('preview.title', { title: level.title }) : t('preview.defaultTitle')}
+          subtitle={
+            graph && level
+              ? [
+                  t('preview.rooms', { count: count('room') }),
+                  t('preview.items', { count: count('item') }),
+                  t('preview.actions', { count: count('action') }),
+                  t('preview.flags', { count: count('flag') }),
+                  t('preview.scoring', { points: formatNumber(level.points), par: level.par }),
+                ].join(' · ')
+              : t('preview.defaultSubtitle')
+          }
+          icon={<Network className="text-quantum-400" aria-hidden />}
+        />
+      </div>
 
       {loading && !level ? (
         <Loading label={t('preview.loading')} />
@@ -524,24 +527,17 @@ function LevelPreview({ id }: { id: string }) {
       ) : graph && flow ? (
         <>
           {unreachable.length > 0 && (
-            <p className="flex items-center gap-2 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
+            <p className="flex shrink-0 items-center gap-2 rounded-lg border border-red-900 bg-red-950/40 px-4 py-3 text-sm text-red-300">
               <AlertTriangle size={16} aria-hidden />
               {t('preview.unreachable', { rooms: unreachable.map((n) => n.label).join(', ') })}
             </p>
           )}
 
-          <div className={`${card} space-y-3 p-4`}>
-            <Legend hidden={hidden} onToggle={toggle} />
-            <p className="text-xs text-slate-500">
-              {t('preview.hint')}
-            </p>
-          </div>
-
           <div
             ref={canvas}
             className={`overflow-hidden bg-slate-950 ${
               fullscreen === 'off'
-                ? 'relative h-[70vh] min-h-[28rem] rounded-xl border border-slate-800'
+                ? 'relative min-h-0 flex-1 rounded-xl border border-slate-800'
                 : fullscreen === 'window'
                   ? 'fixed inset-0 z-50'
                   : 'relative h-full w-full'
@@ -593,16 +589,17 @@ function LevelPreview({ id }: { id: string }) {
               />
             </ReactFlow>
 
-            {fullscreen !== 'off' && (
-              <details className="absolute left-3 top-3 max-h-[calc(100%-1.5rem)] w-64 overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 p-3 shadow-xl">
-                <summary className="cursor-pointer text-sm font-bold text-white">
-                  {level?.title} <span className="font-normal text-slate-400">· {t('preview.legend')}</span>
-                </summary>
-                <div className="mt-3 space-y-3">
-                  <Legend hidden={hidden} onToggle={toggle} compact />
-                </div>
-              </details>
-            )}
+            {/* Legend and link filters, collapsed by default so the graph keeps the space; stops above the zoom controls. */}
+            <details className="absolute left-3 top-3 max-h-[calc(100%-10rem)] overflow-y-auto rounded-lg border border-slate-700 bg-slate-900/95 px-3 py-2 shadow-xl open:w-72 open:py-3">
+              <summary className="cursor-pointer text-sm font-bold text-white">
+                {fullscreen !== 'off' && <span>{level?.title} · </span>}
+                {t('preview.legendTitle')}
+              </summary>
+              <div className="mt-3 space-y-3">
+                <Legend hidden={hidden} onToggle={toggle} compact />
+                <p className="text-xs text-slate-500">{t('preview.hint')}</p>
+              </div>
+            </details>
 
             {selected && (
               <aside
